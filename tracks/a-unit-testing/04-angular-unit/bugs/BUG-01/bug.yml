@@ -1,0 +1,6 @@
+id: BUG-01
+title: "The cart subtotal ignores the quantity"
+hint: "Use quantities other than 1 when you check the subtotal."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart.service.ts

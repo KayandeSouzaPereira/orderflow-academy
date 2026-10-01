@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/cart/cart.service.ts b/app/frontend/src/app/cart/cart.service.ts
+index 20ef6ea..f8c15f5 100644
+--- a/app/frontend/src/app/cart/cart.service.ts
++++ b/app/frontend/src/app/cart/cart.service.ts
+@@ -54,7 +54,7 @@ export class CartService {
+ 
+   /** Removes the line of one product; other lines stay untouched. */
+   remove(productId: string): void {
+-    this.lines.update((lines) => lines.filter((line) => line.product.id !== productId));
++    this.lines.update((lines) => lines.filter((line) => line.product.id === productId && false));
+   }
+ 
+   clear(): void {

@@ -1,0 +1,6 @@
+id: BUG-02
+title: "Removing one product empties the whole cart"
+hint: "Put two products in the cart before removing one."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart.service.ts

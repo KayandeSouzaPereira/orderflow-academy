@@ -1,0 +1,6 @@
+id: BUG-05
+title: "The cancel button is shown for CONFIRMED orders"
+hint: "Check which actions each status offers, not only PENDING."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.html

@@ -1,0 +1,6 @@
+id: BUG-04
+title: "No message is shown when cancelling answers 409"
+hint: "Answer the cancel request with a 409 and look for the message on screen."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.ts
