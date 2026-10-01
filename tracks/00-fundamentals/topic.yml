@@ -3,3 +3,4 @@ title: Fundamentals - what to test, where and why
 track: 00-fundamentals
 kind: custom
 pass_threshold: 70
+watch_paths: [tracks/00-fundamentals/answers.yml]

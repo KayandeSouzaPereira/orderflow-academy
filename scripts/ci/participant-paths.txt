@@ -1,0 +1,18 @@
+# Paths a participant may change. Everything else in app/, scripts/, tracks/
+# and docs/ is replaced with the version from main before an official review
+# (scripts/ci/sanitize.sh), so production code and the scoring tools can never
+# influence a score. One repo-relative path per line; a trailing slash means a
+# folder. Lines starting with # are comments.
+app/backend/src/test/java/dev/orderflow/tracks/
+app/api-tests/src/test/java/dev/orderflow/apitests/tracks/
+app/api-tests/manual-cases.md
+app/api-tests/TEAM-NOTES.md
+app/api-tests/docs/
+app/exercises/src/
+app/e2e/tests/tracks/
+app/frontend/src/app/cart/cart.service.spec.ts
+app/frontend/src/app/orders/order-status.component.spec.ts
+# A-03 (TDD kata): the participant's own implementation.
+app/backend/src/main/java/dev/orderflow/domain/coupon/
+# 00-fundamentals
+tracks/00-fundamentals/answers.yml

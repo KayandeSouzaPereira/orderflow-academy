@@ -1,0 +1,228 @@
+# Official score of a participant branch.
+#
+# Why it is built this way. A workflow started by `push` runs the file that is
+# in the pushed branch, and participants control their branch. This workflow
+# is started by `workflow_run`, which always runs the file from the default
+# branch (main), and it only reads the participant's commit as DATA:
+#
+#   trusted/  checkout of main      -> the only source of scripts, topics, bugs
+#   work/     the participant commit -> tests, answers, workflow files only
+#
+# scripts/ci/sanitize.sh (taken from trusted/) replaces scripts/, tracks/,
+# docs/ and app/ in work/ with main's copy and restores only the paths a
+# participant may change (scripts/ci/participant-paths.txt). Nothing from the
+# participant's branch runs before that. Permissions are read-only and the
+# job has no secrets.
+#
+# Starts: after a push to participant/** (via participant-push), or by hand
+# (Actions > review > Run workflow) for a branch and a topic.
+name: review
+
+on:
+  workflow_run:
+    workflows: ["participant-push"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Participant branch, e.g. participant/ana"
+        required: true
+      topic:
+        description: 'Topic (track/topic), "changed" (since the last push) or "all"'
+        required: true
+        default: all
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: review-${{ github.event.workflow_run.head_branch || inputs.branch }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    name: Plan
+    # Participant branches of this repository only (never forks).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (startsWith(github.event.workflow_run.head_branch, 'participant/') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      topics: ${{ steps.detect.outputs.topics }}
+      branch: ${{ steps.detect.outputs.branch }}
+      sha: ${{ steps.detect.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: trusted
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || inputs.branch }}
+          path: work
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download the push information
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: push-info
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: push-info
+      - name: Install yq
+        run: |
+          if ! yq --version 2>/dev/null | grep -q mikefarah; then
+            sudo curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.54.1/yq_linux_amd64
+            sudo chmod +x /usr/local/bin/yq
+          fi
+      - name: Decide which topics to review
+        id: detect
+        env:
+          EVENT: ${{ github.event_name }}
+          BRANCH_INPUT: ${{ github.event.workflow_run.head_branch || inputs.branch }}
+          FILTER_INPUT: ${{ inputs.topic }}
+        run: |
+          set -euo pipefail
+          case "$BRANCH_INPUT" in
+            participant/*) ;;
+            *) echo "::error::Only participant/* branches are reviewed (got: ${BRANCH_INPUT})"; exit 1 ;;
+          esac
+          sha="$(git -C work rev-parse HEAD)"
+          before=""
+          if [[ -f push-info/push.json ]]; then
+            before="$(jq -r '.before // ""' push-info/push.json)"
+          fi
+          filter="changed"
+          if [[ "$EVENT" == "workflow_dispatch" ]]; then
+            filter="${FILTER_INPUT:-all}"
+          fi
+          topics="$(trusted/scripts/ci/detect-topics.sh work "$before" "$sha" "$filter")"
+          echo "Branch ${BRANCH_INPUT} @ ${sha}: ${topics}"
+          {
+            echo "topics=${topics}"
+            echo "branch=${BRANCH_INPUT}"
+            echo "sha=${sha}"
+          } >> "$GITHUB_OUTPUT"
+
+  review:
+    name: Review (${{ matrix.topic }})
+    needs: plan
+    if: needs.plan.outputs.topics != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        topic: ${{ fromJson(needs.plan.outputs.topics) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: trusted
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          path: work
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Replace scripts, topics, bugs and production code with main's
+        env:
+          SHA: ${{ needs.plan.outputs.sha }}
+        run: trusted/scripts/ci/sanitize.sh trusted work "$SHA"
+
+      - name: Install yq
+        run: |
+          if ! yq --version 2>/dev/null | grep -q mikefarah; then
+            sudo curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.54.1/yq_linux_amd64
+            sudo chmod +x /usr/local/bin/yq
+          fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: |
+            trusted/app/backend/pom.xml
+            trusted/app/api-tests/pom.xml
+            trusted/app/exercises/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            trusted/app/frontend/package-lock.json
+            trusted/app/e2e/package-lock.json
+      - uses: actions/cache@v4
+        if: startsWith(matrix.topic, 'c-e2e-testing/0') && !endsWith(matrix.topic, '05-e2e-in-ci')
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('trusted/app/e2e/package-lock.json') }}
+      - name: Install Playwright and Chromium
+        if: startsWith(matrix.topic, 'c-e2e-testing/0') && !endsWith(matrix.topic, '05-e2e-in-ci')
+        working-directory: work/app/e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Install the frontend dependencies
+        if: endsWith(matrix.topic, '04-angular-unit')
+        working-directory: work/app/frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Review
+        working-directory: work
+        env:
+          REVIEW_BRANCH: ${{ needs.plan.outputs.branch }}
+          TOPIC: ${{ matrix.topic }}
+        run: ./scripts/review.sh "$TOPIC" --json
+
+      - name: Keep the result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ strategy.job-index }}
+          path: work/results
+          if-no-files-found: ignore
+          retention-days: 30
+
+  summary:
+    name: Summary
+    needs: [plan, review]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          merge-multiple: true
+          path: results
+      - name: Job Summary
+        env:
+          BRANCH: ${{ needs.plan.outputs.branch }}
+          SHA: ${{ needs.plan.outputs.sha }}
+          TOPICS: ${{ needs.plan.outputs.topics }}
+        run: |
+          status=0
+          mkdir -p results
+          ./scripts/ci/summary.sh results "$BRANCH" "$SHA" > summary.md || status=$?
+          expected="$(jq 'length' <<<"$TOPICS")"
+          received="$(find results -name '*.json' | wc -l)"
+          if (( received < expected )); then
+            printf '\n%s of %s topics produced no result (environment error or cancelled run): see the logs of their jobs.\n' \
+              "$(( expected - received ))" "$expected" >> summary.md
+            status=1
+          fi
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"

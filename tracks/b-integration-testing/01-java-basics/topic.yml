@@ -3,3 +3,4 @@ title: Java basics for testers
 track: b-integration-testing
 kind: custom
 pass_threshold: 70
+watch_paths: [app/exercises/]
