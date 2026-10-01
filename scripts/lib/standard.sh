@@ -79,7 +79,7 @@ review_standard() {
   [[ -n "$STANDARD_OVERLAY" ]] && review_workspace_overlay "$STANDARD_OVERLAY"
 
   local -a specs=()
-  mapfile -t specs < <(topic '(.test_files // ([.test_dir] | map(select(. != null))))[]')
+  mapfile -t specs < <(topic '(.suites // [] | map(.kind + "|" + .test_package))[], (.test_files // ([.test_dir] | map(select(. != null))))[]')
   runner_init "$kind" "$(topic '.test_package')" "${specs[@]}"
   [[ "$kind" == "frontend" ]] && runner_frontend_dependencies
   [[ "$kind" == "e2e" ]] && runner_e2e_dependencies
@@ -101,6 +101,7 @@ review_standard() {
   fi
 
   standard__gate
+  standard__hook topic_after_gate
 
   # Runtime practices need the original code, so they run before the bug bank.
   standard__evaluate_practices
@@ -113,10 +114,19 @@ review_standard() {
   score_end
 }
 
+# Calls a hook function a topic's review.sh may define (before review_standard
+# runs): topic_after_gate (the Surefire reports are those of the gate run) and
+# topic_report (adds criteria after the standard ones).
+standard__hook() {
+  if declare -F "$1" >/dev/null; then
+    "$1"
+  fi
+}
+
 standard__prechecks() {
   local kind="$1"
   case "$kind" in
-    backend | api) review_require_java ;;
+    backend | api | multi) review_require_java ;;
     frontend | e2e) review_require_tools node ;;
     *) score_fatal "topic kind '${kind}' cannot use the standard review" \
          "Use kind backend, api or frontend, or write a custom review.sh with the score.sh API." ;;
@@ -152,7 +162,7 @@ standard__required_practices() {
 standard__require_test_files() {
   (( ${#PRACTICE_FILES[@]} > 0 )) && return 0
   local where
-  where="$(topic '.test_package // .test_dir // (.test_files // [] | join(", "))')"
+  where="$(topic '.test_package // .test_dir // (.test_files // [] | join(", ")) // (.suites // [] | map(.test_package) | join(", "))')"
   score_hint "no-tests" "Write your tests in ${where} (see the topic README)."
   score_gate false "no test files in ${where}"
 }
@@ -449,7 +459,10 @@ standard__mutation() {
   [[ -n "$classes" ]] || score_fatal "topic.yml has a mutation weight but no mutation.target_classes" \
     "Add mutation: { target_classes: [\"dev.orderflow.domain.*\"] }."
   score_progress "mutation testing on ${classes} (this is the slow part; use --quick to skip)"
-  STANDARD_MUTATION="$(mutation_run "$(topic '.kind')" "$classes" "$tests")" || {
+  local mutation_kind
+  mutation_kind="$(topic '.kind')"
+  [[ "$mutation_kind" == "multi" ]] && mutation_kind=backend
+  STANDARD_MUTATION="$(mutation_run "$mutation_kind" "$classes" "$tests")" || {
     score_warn "mutation testing failed to run (see ${MUTATION_LOG}); counted as 0%."
     STANDARD_MUTATION="0 0"
   }
@@ -513,4 +526,6 @@ standard__report() {
     earned="$(review_round_ratio "$weight" "$STANDARD_PRACTICES_WEIGHT_PASSED" "$STANDARD_PRACTICES_WEIGHT_TOTAL")"
     score_criterion "Practices" "$earned" "$weight" "${STANDARD_PRACTICES_PASSED}/${STANDARD_PRACTICES_TOTAL}"
   fi
+
+  standard__hook topic_report
 }
