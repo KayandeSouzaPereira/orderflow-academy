@@ -154,6 +154,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/frontend/package-lock.json
 
       - name: Validate the bug bank against the reference solution
         run: ./scripts/dev/validate-topic.sh "${{ matrix.topic }}" --solutions .private/solutions

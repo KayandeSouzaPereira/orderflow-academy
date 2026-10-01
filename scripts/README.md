@@ -76,16 +76,22 @@ tracks/<track>/<NN-topic>/
 id: a01
 title: Test anatomy
 track: a-unit-testing
-kind: backend                 # backend | api | custom  (frontend, e2e: phases 4-5)
+kind: backend                 # backend | api | frontend | custom  (e2e: phase 5)
 test_package: dev.orderflow.tracks.a01
+# kind frontend lists spec files instead (relative to app/frontend):
+# test_files: [src/app/cart/cart.service.spec.ts]
 requires_stack: false         # true: build and start the full stack (kind api)
 requires_docker: false        # true: Docker needed without the stack (Testcontainers)
 pass_threshold: 70
 weights: { bugs: 50, mutation: 25, practices: 25 }   # defaults: backend 50/25/25, api 70/0/30
 mutation:
-  target_classes: ["dev.orderflow.domain.OrderPricing"]
-  target_tests: ["dev.orderflow.tracks.a01.*"]       # default: <test_package>.*
+  target_classes: ["dev.orderflow.domain.OrderPricing"]   # frontend: source files
+  target_tests: ["dev.orderflow.tracks.a01.*"]            # default: <test_package>.* (frontend: test_files)
   target_score: 80
+implementation_swap:          # TDD kata only: bugs are planted in a reference implementation
+  path: app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+  reference: bugs/reference/CouponPolicy.java
+bug_bank: { min: 4, max: 6 }  # optional: expected number of bugs
 practices:
   - no-thread-sleep
   - { rule: every-test-asserts, weight: 2 }          # counts twice
@@ -126,11 +132,19 @@ changes in `app/` (commit unrelated work first):
 | `random-order-stable` | suite passes twice with random class and method order (fixed seeds) |
 | `idempotent-data` | suite passes again on the same environment |
 | `black-box-only` | always a prerequisite: no backend or AWS SDK in `api-tests` |
+| `no-quarkus-test` | no `@QuarkusTest`, `@InjectMock` and friends (pure unit tests) |
+| `starter-fixed` | the starter test class was copied and fixed (`file`, `forbidden_names`, `min_tests`) |
+| `tdd-history` | Git history: tests change in or right before most implementation commits (`implementation`, `min_percent`); skipped with `--overlay` |
 
 Each rule is worth `practices weight x rule weight / sum of rule weights`.
-Criteria are rounded to the nearest point. Track C rules, `no-quarkus-test`,
-`tdd-history`, `traceability`, `no-empty-catch` and `original-tests-kept` are
-added with the topics that use them.
+Criteria are rounded to the nearest point. `every-test-asserts` understands
+JUnit methods and TypeScript `it()`/`test()` blocks. Track C rules,
+`traceability`, `no-empty-catch` and `original-tests-kept` are added with the
+topics that use them.
+
+Mutation testing: PIT for backend topics; Stryker for frontend topics, through
+its command runner (see `app/frontend/stryker.config.json` and
+[docs/DECISIONS.md](../docs/DECISIONS.md)).
 
 ## Library API (`scripts/lib/score.sh`)
 
