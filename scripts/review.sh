@@ -42,7 +42,20 @@ main() {
     "Run ./scripts/review.sh --help to list the topics."
   [[ -f "${topic_dir}/review.sh" ]] || score_fatal "topic '${topic}' has no review.sh" \
     "Tell the maintainer: every topic needs tracks/<track>/<topic>/review.sh."
-  exec bash "${topic_dir}/review.sh" "$@"
+  # Run the topic review as a child and forward Ctrl+C / TERM to it, instead of
+  # 'exec': on Windows (MSYS) exec leaves a stub process behind, so a signal
+  # sent to this PID would never reach the review and its cleanup.
+  bash "${topic_dir}/review.sh" "$@" &
+  local child=$! status=0
+  # A background child ignores SIGINT, so forward TERM in both cases.
+  trap 'kill -TERM "$child" 2>/dev/null || true' INT TERM
+  wait "$child" || status=$?
+  # After a forwarded signal, wait until the review has cleaned up.
+  while kill -0 "$child" 2>/dev/null; do
+    status=0
+    wait "$child" || status=$?
+  done
+  exit "$status"
 }
 
 main "$@"
