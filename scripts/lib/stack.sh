@@ -34,13 +34,17 @@ stack__compose() {
 # Docker Desktop sometimes drops an API call ("error during connect ... EOF");
 # one retry absorbs that without hiding real failures.
 stack__up_with_retry() {
-  local attempt
-  for attempt in 1 2; do
+  local attempt marker
+  for attempt in 1 2 3 4; do
+    marker="$(wc -c <"$STACK_LOG")"
     if run_with_timeout "${STACK_TIMEOUT:-900}" stack__compose up -d --build --wait >>"$STACK_LOG" 2>&1; then
       return 0
     fi
-    grep -qE "$STACK_TRANSIENT_ERRORS" "$STACK_LOG" || return 1
-    (( attempt == 1 )) && score_progress "Docker dropped a request; retrying once"
+    # Only this attempt's output counts: an old error must not hide a new one.
+    tail -c +"$(( marker + 1 ))" "$STACK_LOG" | grep -qE "$STACK_TRANSIENT_ERRORS" || return 1
+    (( attempt == 4 )) && return 1
+    score_progress "Docker dropped a request; retrying (${attempt}/3)"
+    sleep $(( attempt * 8 ))
   done
   return 1
 }
