@@ -31,19 +31,11 @@ EOF
 
 child=""
 
-# Sends TERM to the running topic review. On Windows (MSYS) the review may
-# run under an intermediate process that does not pass signals on: signal its
-# children instead (the intermediate one exits by itself when they do).
+# Sends TERM to the running topic review (a background subshell ignores
+# SIGINT, so Ctrl+C is forwarded as TERM).
 # shellcheck disable=SC2329 # invoked by the trap below
 forward_signal() {
-  local pid sent=0
-  case "$(uname -s)" in
-    MINGW* | MSYS* | CYGWIN*)
-      for pid in $(ps -ef 2>/dev/null | awk -v parent="$child" '$3 == parent { print $2 }'); do
-        kill -TERM "$pid" 2>/dev/null && sent=1
-      done ;;
-  esac
-  (( sent == 1 )) || kill -TERM "$child" 2>/dev/null || true
+  kill -TERM "$child" 2>/dev/null || true
 }
 
 main() {
@@ -59,13 +51,16 @@ main() {
     "Run ./scripts/review.sh --help to list the topics."
   [[ -f "${topic_dir}/review.sh" ]] || score_fatal "topic '${topic}' has no review.sh" \
     "Tell the maintainer: every topic needs tracks/<track>/<topic>/review.sh."
-  # Run the topic review as a child and forward Ctrl+C / TERM to it, instead of
-  # 'exec': on Windows (MSYS) exec leaves a stub process behind, so a signal
-  # sent to this PID would never reach the review and its cleanup.
-  bash "${topic_dir}/review.sh" "$@" &
+  # Run the topic review in a subshell (a fork, no 'exec') and forward Ctrl+C
+  # and TERM to it. On Windows (MSYS) every exec leaves an intermediate process
+  # that swallows signals; a forked subshell is always the real process, so the
+  # review's cleanup (containers, temporary folders) always runs.
+  (
+    # shellcheck source=/dev/null
+    source "${topic_dir}/review.sh" "$@"
+  ) &
   child=$!
   local status=0
-  # A background child ignores SIGINT, so forward TERM in both cases.
   trap forward_signal INT TERM
   wait "$child" || status=$?
   # After a forwarded signal, wait until the review has cleaned up.
