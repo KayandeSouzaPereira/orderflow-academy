@@ -41,7 +41,9 @@ git switch -c participant/<github-username> main
 git push -u origin participant/<github-username>
 ```
 
-Study branches (`study/<user>/<topic>`, topic B-02) are not scored.
+Study branches (`study/<user>/<topic>`, topic B-02) and the bonus pair branches
+(`pair/<user1>-<user2>`) are not scored by CI: the bonus is a live session, and
+its score comes from the local `./scripts/review.sh bonus-ai-review`.
 After the phase with `TEAM-NOTES.md` is on `main`, create the B-02 exercise branches:
 
 ```bash
