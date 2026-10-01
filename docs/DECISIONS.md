@@ -24,3 +24,5 @@ listed (D1-D6) and every deviation from it. Newest last.
 | - | B-02 exercise branches are created by `scripts/dev/create-b02-exercise.sh --push` after the phase that adds `TEAM-NOTES.md` reaches main. | They must start from main, so they can only exist once main has the file. |
 | - | Reviews of custom topics whose work is not files (B-02) validate with Git bundles: `empty/`, `reference/` and `calibration-weak/repo.bundle` in the private repository. | A history cannot be applied as an overlay. |
 | - | The frontend `package-lock.json` is generated on Linux. | A lock file written on Windows misses optional packages of other platforms (`@emnapi/*`), which breaks `npm ci` in Docker and CI. |
+| - | Planted bugs never rely on S3 signature checks. | Floci does not verify pre-signed URL signatures (a real difference from AWS): a bug that only spoils the signature goes unnoticed. Bugs break the object key instead. |
+| - | Reviews call Node tools through `node <package>/cli.js` instead of `npx`. | `npx` fails silently in Git Bash with a portable Node on Windows; calling the CLI file works everywhere. |
