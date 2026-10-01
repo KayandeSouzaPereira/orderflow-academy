@@ -29,6 +29,23 @@ EOF
     | sed -e "s#^${ROOT}/tracks/##" -e 's#/topic.yml$##' | sort | sed 's/^/  /'
 }
 
+child=""
+
+# Sends TERM to the running topic review. On Windows (MSYS) the review may
+# run under an intermediate process that does not pass signals on: signal its
+# children instead (the intermediate one exits by itself when they do).
+# shellcheck disable=SC2329 # invoked by the trap below
+forward_signal() {
+  local pid sent=0
+  case "$(uname -s)" in
+    MINGW* | MSYS* | CYGWIN*)
+      for pid in $(ps -ef 2>/dev/null | awk -v parent="$child" '$3 == parent { print $2 }'); do
+        kill -TERM "$pid" 2>/dev/null && sent=1
+      done ;;
+  esac
+  (( sent == 1 )) || kill -TERM "$child" 2>/dev/null || true
+}
+
 main() {
   if (( $# == 0 )) || [[ "$1" == "-h" || "$1" == "--help" ]]; then
     usage
@@ -46,9 +63,10 @@ main() {
   # 'exec': on Windows (MSYS) exec leaves a stub process behind, so a signal
   # sent to this PID would never reach the review and its cleanup.
   bash "${topic_dir}/review.sh" "$@" &
-  local child=$! status=0
+  child=$!
+  local status=0
   # A background child ignores SIGINT, so forward TERM in both cases.
-  trap 'kill -TERM "$child" 2>/dev/null || true' INT TERM
+  trap forward_signal INT TERM
   wait "$child" || status=$?
   # After a forwarded signal, wait until the review has cleaned up.
   while kill -0 "$child" 2>/dev/null; do
