@@ -1,0 +1,6 @@
+id: BUG-02
+title: "Creating an order does not reserve stock"
+hint: "What should be different in the system after an order exists? Look at the product."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

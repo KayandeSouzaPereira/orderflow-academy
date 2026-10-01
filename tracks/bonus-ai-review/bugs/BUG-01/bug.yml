@@ -1,0 +1,6 @@
+id: BUG-01
+title: "An order of exactly R$500.00 gets the discount"
+hint: "Business rules live on boundaries: which values sit right at the limit?"
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java

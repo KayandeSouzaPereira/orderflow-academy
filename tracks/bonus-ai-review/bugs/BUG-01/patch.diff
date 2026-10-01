@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+index 818bfd2..aea0e55 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+@@ -23,7 +23,7 @@ public class OrderPricing {
+             }
+             subtotal += item.subtotalInCents();
+         }
+-        if (subtotal > DISCOUNT_THRESHOLD_IN_CENTS) {
++        if (subtotal >= DISCOUNT_THRESHOLD_IN_CENTS) {
+             // Integer division on non-negative values rounds down.
+             return subtotal * (100 - DISCOUNT_PERCENT) / 100;
+         }
