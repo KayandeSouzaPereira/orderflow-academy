@@ -7,13 +7,13 @@
 #   stack_rebuild <side>   rebuilds and restarts backend or frontend only
 #   stack_down             removes containers, network and volumes
 #
-# It runs as a separate compose project ("orderflow-review") on its own ports,
+# It runs as a separate compose project ("orderflow-review", or REVIEW_STACK_PROJECT) on its own ports,
 # so it never clashes with the developer stack. After stack_up:
 #   API_BASE_URL=http://localhost:${STACK_BACKEND_PORT}
 #   E2E_BASE_URL=http://localhost:${STACK_FRONTEND_PORT}
 # -----------------------------------------------------------------------------
 
-STACK_PROJECT="orderflow-review"
+STACK_PROJECT="${REVIEW_STACK_PROJECT:-orderflow-review}"
 STACK_FLOCI_PORT="${REVIEW_FLOCI_PORT:-14566}"
 STACK_BACKEND_PORT="${REVIEW_BACKEND_PORT:-18080}"
 STACK_FRONTEND_PORT="${REVIEW_FRONTEND_PORT:-14200}"
