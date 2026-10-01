@@ -129,7 +129,7 @@ changes in `app/` (commit unrelated work first):
 | --- | --- |
 | `no-thread-sleep` | no `Thread.sleep` / `TimeUnit.X.sleep` in the topic's tests |
 | `no-disabled-tests` | no `@Disabled`, `@Ignore`, `xit`, `xdescribe`, `.skip(` |
-| `every-test-asserts` | every `@Test`/`@ParameterizedTest`/`@RepeatedTest` method has an assertion |
+| `every-test-asserts` | every `@Test`/`@ParameterizedTest`/`@RepeatedTest` method (or `it`/`test` block) has an assertion; calls to helpers named `assert*`, `await*`, `expect*` or `verify*` count |
 | `no-hardcoded-endpoints` | no `localhost:<port>`, `:4566` or `.port(<number>)` |
 | `naming-convention` | test methods match `should<Result>When<Condition>` |
 | `random-order-stable` | suite passes twice with random class and method order (fixed seeds) |

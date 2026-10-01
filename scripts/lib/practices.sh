@@ -20,7 +20,8 @@ PRACTICE_RULE_JSON='{}'
 # (reference or calibration solutions have no history of their own).
 PRACTICE_HISTORY_RULES=" tdd-history "
 # EREs below avoid backslashes ([(] instead of \(): awk -v would eat them.
-PRACTICE_ASSERTIONS='assertThat|assert[A-Z][A-Za-z]*[[:space:]]*[(]|verify[A-Za-z]*[[:space:]]*[(]|[.]statusCode[[:space:]]*[(]|[.]body[[:space:]]*[(]|expect[[:space:]]*[(]|expect[.](poll|soft)[[:space:]]*[(]'
+# Helpers named assert*/await*/expect*/verify* (e.g. awaitConfirmed, expectStatus) count too.
+PRACTICE_ASSERTIONS='assertThat|assert[A-Z][A-Za-z]*[[:space:]]*[(]|await[A-Z][A-Za-z]*[[:space:]]*[(]|expect[A-Z][A-Za-z]*[[:space:]]*[(]|verify[A-Za-z]*[[:space:]]*[(]|[.]statusCode[[:space:]]*[(]|[.]body[[:space:]]*[(]|expect[[:space:]]*[(]|expect[.](poll|soft)[[:space:]]*[(]'
 PRACTICE_SEEDS=(20261001 4242)
 
 practice_title() {
@@ -52,7 +53,7 @@ practice_hint() {
   case "$1" in
     no-thread-sleep) echo "Wait for a condition, not for time: await().atMost(...).untilAsserted(...) (Awaitility)." ;;
     no-disabled-tests) echo "Remove @Disabled/@Ignore: a skipped test protects nothing. Fix it or delete it." ;;
-    every-test-asserts) echo "A test without an assertion only checks that nothing throws. Assert the result you expect." ;;
+    every-test-asserts) echo "A test without an assertion only checks that nothing throws. Assert the result you expect (helpers named assert*/expect*/await* count)." ;;
     no-hardcoded-endpoints) echo "Read hosts and ports from configuration (TestApi, @ConfigProperty, injected clients), never from literals." ;;
     naming-convention) echo "Rename tests to should<Result>When<Condition>, e.g. shouldReturn409WhenStockIsInsufficient." ;;
     random-order-stable) echo "A test relies on state left by another one. Give each test its own data and no shared mutable fields." ;;
