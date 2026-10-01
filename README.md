@@ -16,8 +16,9 @@ tests from 0 to 100.
 | 2 | Review engine (`scripts/`) and example topic (`tracks/_example`) | done |
 | 3 | Private reference repo and `main-ci.yml` | done |
 | 4 | Fundamentals (`00-fundamentals`) and track A (`a-unit-testing`) | done |
-| 5 | Tracks B and C | next |
-| 6–8 | Participant CI, bonus challenge, pilot | planned |
+| 5 | Track B (`b-integration-testing`) and track C (`c-e2e-testing`) | done |
+| 6 | Participant CI (`review.yml`), rulesets, CODEOWNERS | next |
+| 7–8 | Bonus challenge, pilot | planned |
 
 ## What is inside
 
