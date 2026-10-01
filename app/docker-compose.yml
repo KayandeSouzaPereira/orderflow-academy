@@ -17,18 +17,16 @@ services:
       - "${FLOCI_PORT:-4566}:4566"
 
   aws-init:
-    image: amazon/aws-cli:2.31.0
+    build:
+      context: ./aws-init
     depends_on:
       floci:
         condition: service_started
-    entrypoint: ["bash", "/aws-init/init.sh"]
     environment:
       AWS_ENDPOINT_URL: http://floci:4566
       AWS_DEFAULT_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
-    volumes:
-      - ./aws-init:/aws-init:ro
     restart: "no"
 
   backend:

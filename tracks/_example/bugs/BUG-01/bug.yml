@@ -1,0 +1,6 @@
+id: BUG-01
+title: A PENDING order can "move" to PENDING again
+hint: Check every target status from PENDING, including the ones that must be rejected.
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java

@@ -1,0 +1,6 @@
+id: BUG-03
+title: ensureCanTransition accepts invalid transitions without throwing
+hint: canTransition answers a question; ensureCanTransition must also refuse. Test both methods.
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java
