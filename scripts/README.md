@@ -76,10 +76,12 @@ tracks/<track>/<NN-topic>/
 id: a01
 title: Test anatomy
 track: a-unit-testing
-kind: backend                 # backend | api | frontend | custom  (e2e: phase 5)
+kind: backend                 # backend | api | frontend | e2e | custom
 test_package: dev.orderflow.tracks.a01
 # kind frontend lists spec files instead (relative to app/frontend):
 # test_files: [src/app/cart/cart.service.spec.ts]
+# kind e2e names the test folder (relative to app/e2e):
+# test_dir: tests/tracks/c01
 requires_stack: false         # true: build and start the full stack (kind api)
 requires_docker: false        # true: Docker needed without the stack (Testcontainers)
 pass_threshold: 70
@@ -92,6 +94,7 @@ implementation_swap:          # TDD kata only: bugs are planted in a reference i
   path: app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
   reference: bugs/reference/CouponPolicy.java
 bug_bank: { min: 4, max: 6 }  # optional: expected number of bugs
+bug_sources: [b-integration-testing/03-api-test-setup]  # optional: reuse other topics' bugs (B-09)
 practices:
   - no-thread-sleep
   - { rule: every-test-asserts, weight: 2 }          # counts twice
@@ -135,12 +138,23 @@ changes in `app/` (commit unrelated work first):
 | `no-quarkus-test` | no `@QuarkusTest`, `@InjectMock` and friends (pure unit tests) |
 | `starter-fixed` | the starter test class was copied and fixed (`file`, `forbidden_names`, `min_tests`) |
 | `tdd-history` | Git history: tests change in or right before most implementation commits (`implementation`, `min_percent`); skipped with `--overlay` |
+| `traceability` | every `## MC-NN` case of `cases_file` has a `@Tag("MC-NN")` test; at least `min_cases` cases |
+| `no-wait-for-timeout` | no `page.waitForTimeout` (Playwright) |
+| `no-test-only` | no `test.only`/`.skip`/`.fixme`, `describe.only`/`.skip` |
+| `accessible-locators` | `page.locator(...)` only for `[data-testid]`; no `$()`, `$$()`, XPath |
+| `no-hardcoded-base-url` | no `http://localhost...`, `:4200` or `:8080` in tests |
+| `page-objects` | `*.spec.ts` files never call `page.getBy*` or `page.locator` |
+| `api-data-setup` | the topic folder prepares data with `request.post(...)` |
+| `stable-without-retries` | the suite passes twice more with `--retries=0` |
 
 Each rule is worth `practices weight x rule weight / sum of rule weights`.
 Criteria are rounded to the nearest point. `every-test-asserts` understands
-JUnit methods and TypeScript `it()`/`test()` blocks. Track C rules,
-`traceability`, `no-empty-catch` and `original-tests-kept` are added with the
-topics that use them.
+JUnit methods and TypeScript `it()`/`test()` blocks. `no-empty-catch` and
+`original-tests-kept` come with the bonus challenge (phase 7).
+
+Several reviews with a stack can run at the same time with different
+`REVIEW_STACK_PROJECT`, `REVIEW_FLOCI_PORT`, `REVIEW_BACKEND_PORT` and
+`REVIEW_FRONTEND_PORT`.
 
 Mutation testing: PIT for backend topics; Stryker for frontend topics, through
 its command runner (see `app/frontend/stryker.config.json` and

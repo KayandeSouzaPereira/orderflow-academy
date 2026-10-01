@@ -27,7 +27,9 @@ app/
 ├── aws-init/            # creates tables, queue, bucket; seeds 10 products with images
 ├── backend/             # Quarkus (Java 21) - white-box tests of track A live here
 ├── api-tests/           # black-box API tests of track B (no dependency on the backend)
-└── frontend/            # Angular - unit tests of topic A-04 live next to the components
+├── exercises/           # Java exercises of topic B-01
+├── frontend/            # Angular - unit tests of topic A-04 live next to the components
+└── e2e/                 # Playwright end-to-end tests of track C
 ```
 
 ## Requirements
@@ -92,6 +94,7 @@ Configuration (environment variables):
 cd app/backend && ./mvnw test        # needs Docker: starts Floci with Testcontainers
 cd app/api-tests && ./mvnw test      # needs the full stack running
 cd app/frontend && npm test
+cd app/e2e && npm ci && npx playwright install chromium && E2E_BASE_URL=http://localhost:4200 npx playwright test tests/smoke
 ```
 
 ## Get your score
