@@ -1,0 +1,21 @@
+# Build output
+target/
+dist/
+out-tsc/
+.angular/
+
+# Dependencies
+node_modules/
+
+# Review output
+results/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Env
+.env
