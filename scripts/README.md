@@ -95,6 +95,7 @@ implementation_swap:          # TDD kata only: bugs are planted in a reference i
   reference: bugs/reference/CouponPolicy.java
 bug_bank: { min: 4, max: 6 }  # optional: expected number of bugs
 bug_sources: [b-integration-testing/03-api-test-setup]  # optional: reuse other topics' bugs (B-09)
+parallel_stacks: 3            # optional, stack topics: check the bugs on N stacks at once
 practices:
   - no-thread-sleep
   - { rule: every-test-asserts, weight: 2 }          # counts twice
@@ -151,6 +152,12 @@ Each rule is worth `practices weight x rule weight / sum of rule weights`.
 Criteria are rounded to the nearest point. `every-test-asserts` understands
 JUnit methods and TypeScript `it()`/`test()` blocks. `no-empty-catch` and
 `original-tests-kept` come with the bonus challenge (phase 7).
+
+With `parallel_stacks: N` (or `REVIEW_PARALLEL_STACKS=N`), the bug bank of a
+stack topic runs on N extra stacks (compose projects `<project>-w1..N`, ports
+shifted by 1000 x k), each with its own copy of the app; outcomes are recorded
+in bug order, so the score does not depend on timing. B-09 uses 3 stacks:
+about 12 minutes instead of 22, and about 6 GB of RAM more.
 
 Several reviews with a stack can run at the same time with different
 `REVIEW_STACK_PROJECT`, `REVIEW_FLOCI_PORT`, `REVIEW_BACKEND_PORT` and

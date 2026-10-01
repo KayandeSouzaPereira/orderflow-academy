@@ -26,3 +26,5 @@ listed (D1-D6) and every deviation from it. Newest last.
 | - | The frontend `package-lock.json` is generated on Linux. | A lock file written on Windows misses optional packages of other platforms (`@emnapi/*`), which breaks `npm ci` in Docker and CI. |
 | - | Planted bugs never rely on S3 signature checks. | Floci does not verify pre-signed URL signatures (a real difference from AWS): a bug that only spoils the signature goes unnoticed. Bugs break the object key instead. |
 | - | Reviews call Node tools through `node <package>/cli.js` instead of `npx`. | `npx` fails silently in Git Bash with a portable Node on Windows; calling the CLI file works everywhere. |
+| - | B-09 checks its 20 bugs on 3 stacks in parallel (`parallel_stacks: 3`). | One stack took 22 minutes (each bug rebuilds the backend image); three take about 12, within the 15 minutes of tracks B and C. Decided by the maintainer. |
+| - | `scripts/review.sh` runs the topic review in a forked subshell and forwards Ctrl+C/TERM to it, instead of `exec`. | On Windows (MSYS) every exec leaves an intermediate process that swallows signals, so an interrupted review left its stacks running. |
