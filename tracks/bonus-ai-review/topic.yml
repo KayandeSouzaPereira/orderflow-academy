@@ -29,3 +29,4 @@ practices:
   - random-order-stable
   - no-empty-catch
 timeouts: { test_run_seconds: 600 }
+random_seeds: [1, 2]   # 20261001 and 4242 (the default) put OrderQueryApiTest in a lucky order

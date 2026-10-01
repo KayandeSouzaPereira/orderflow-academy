@@ -1,0 +1,6 @@
+id: BUG-02
+title: "The history is listed newest first"
+hint: "Order is part of the contract: check the position of each entry."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java

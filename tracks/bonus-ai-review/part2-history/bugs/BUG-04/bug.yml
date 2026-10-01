@@ -1,0 +1,6 @@
+id: BUG-04
+title: "The first entry carries the time of the last update instead of the creation time"
+hint: "Each entry has a timestamp: where must it come from?"
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java

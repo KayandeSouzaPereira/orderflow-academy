@@ -78,6 +78,10 @@ review_standard() {
   review_workspace_create
   [[ -n "$STANDARD_OVERLAY" ]] && review_workspace_overlay "$STANDARD_OVERLAY"
 
+  # random_seeds: topics choose the seeds of random-order-stable (default: 2 fixed seeds).
+  local -a seeds=()
+  mapfile -t seeds < <(topic '(.random_seeds // [])[] | tostring')
+  (( ${#seeds[@]} == 0 )) || PRACTICE_SEEDS=("${seeds[@]}")
   local -a specs=()
   mapfile -t specs < <(topic '(.suites // [] | map(.kind + "|" + .test_package))[], (.test_files // ([.test_dir] | map(select(. != null))))[]')
   runner_init "$kind" "$(topic '.test_package')" "${specs[@]}"
@@ -260,14 +264,21 @@ STANDARD_BUGS_DETECTED=0
 # Bug folders of the topic plus, with topic.yml 'bug_sources', those of other
 # topics (B-09 reuses the banks of B-03 to B-07).
 standard__bug_dirs() {
-  local topic_dir="$1" source
-  bugbank_list "$topic_dir"
-  while IFS= read -r source; do
-    [[ -n "$source" ]] || continue
-    [[ -d "${SCORE_REPO_ROOT}/tracks/${source}" ]] || score_fatal "bug source '${source}' not found" \
-      "Check bug_sources in topic.yml."
-    bugbank_list "${SCORE_REPO_ROOT}/tracks/${source}"
-  done < <(topic '(.bug_sources // [])[]')
+  local topic_dir="$1" source dir
+  {
+    bugbank_list "$topic_dir"
+    while IFS= read -r source; do
+      [[ -n "$source" ]] || continue
+      [[ -d "${SCORE_REPO_ROOT}/tracks/${source}" ]] || score_fatal "bug source '${source}' not found" \
+        "Check bug_sources in topic.yml."
+      bugbank_list "${SCORE_REPO_ROOT}/tracks/${source}"
+    done < <(topic '(.bug_sources // [])[]')
+  } | while IFS= read -r dir; do
+    # REVIEW_BUGS="BUG-02 BUG-05": check only those bugs (maintainer debugging).
+    if [[ -z "${REVIEW_BUGS:-}" || " ${REVIEW_BUGS} " == *" $(basename "$dir") "* ]]; then
+      echo "$dir"
+    fi
+  done
 }
 
 # Bug id shown in the report: BUG-NN, or BUG-<topic id>-NN for borrowed bugs.
@@ -291,6 +302,10 @@ standard__run_bug() {
     return 0
   fi
   if [[ "$(topic '.requires_stack')" == "true" ]] && ! stack_rebuild "${side:-backend}"; then
+    if [[ -n "$STANDARD_LOG_DIR" && -f "${STACK_LOG:-}" ]]; then
+      grep -vE '^#[0-9]+ (sha256|extracting|DONE|CACHED)' "$STACK_LOG" | tail -n 20 \
+        >"${STANDARD_LOG_DIR}/$(basename "$bug_dir").log" 2>/dev/null || true
+    fi
     bugbank_restore
     echo "no-build"
     return 0
@@ -317,7 +332,12 @@ standard__record_bug() {
       STANDARD_BUGS_VALID=$(( STANDARD_BUGS_VALID + 1 ))
       score_hint "$id" "$(bugbank_field "$bug_dir" hint)" "$(bugbank_field "$bug_dir" title)" ;;
     no-apply) score_warn "${id}: patch.diff does not apply to the current app; bug ignored." ;;
-    no-build) score_warn "${id}: the ${side:-backend} does not build with this bug; bug ignored." ;;
+    no-build)
+      score_warn "${id}: the ${side:-backend} does not build with this bug; bug ignored."
+      if [[ -n "$STANDARD_LOG_DIR" && -f "${STANDARD_LOG_DIR}/$(basename "$bug_dir").log" ]]; then
+        printf '   … %s: last lines of the build output:\n' "$id" >&2
+        sed 's/^/     | /' "${STANDARD_LOG_DIR}/$(basename "$bug_dir").log" >&2
+      fi ;;
     no-compile) score_warn "${id}: the app does not compile with this bug; bug ignored." ;;
     *) score_warn "${id}: the review could not run this bug (${outcome:-no result}); bug ignored." ;;
   esac
@@ -337,6 +357,8 @@ standard__parallel_stacks() {
 
 standard__bug_bank() {
   local topic_dir="$1" bug_dir index=0 total workers outcome
+  STANDARD_LOG_DIR="${REVIEW_WORKSPACE}/bug-logs"
+  mkdir -p "$STANDARD_LOG_DIR"
   local -a bugs
   mapfile -t bugs < <(standard__bug_dirs "$topic_dir")
   total=${#bugs[@]}
@@ -363,6 +385,7 @@ standard__bug_bank() {
 
 STANDARD_WORKER_PROJECTS=()
 STANDARD_WORKER_DIRS=()
+STANDARD_LOG_DIR=""   # excerpts of builds that failed, shown in the report
 
 standard__workers_cleanup() {
   local project dir

@@ -1,0 +1,12 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java b/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java
+index 0604f30..d032e35 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java
+@@ -21,6 +21,7 @@ public class OrderHistory {
+         if (order.status() != OrderStatus.PENDING) {
+             entries.add(new Entry(order.status(), order.updatedAt()));
+         }
++        java.util.Collections.reverse(entries);
+         return List.copyOf(entries);
+     }
+ }
