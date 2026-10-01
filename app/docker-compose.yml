@@ -6,13 +6,15 @@
 # Environment knobs for the full profile:
 #   ORDERFLOW_PROCESSOR_DELAY_MS  (default 0; track B reviews use 3000)
 #   ORDERFLOW_ADMIN_ENABLED       (default true here, so black-box tests can prepare data)
+#   FLOCI_PORT / BACKEND_PORT / FRONTEND_PORT  host ports (default 4566 / 8080 / 4200);
+#                                 reviews use other ports so they never clash with your dev stack
 name: orderflow
 
 services:
   floci:
     image: floci/floci:2.1.0
     ports:
-      - "4566:4566"
+      - "${FLOCI_PORT:-4566}:4566"
 
   aws-init:
     image: amazon/aws-cli:2.31.0
@@ -39,11 +41,11 @@ services:
     environment:
       AWS_ENDPOINT_URL: http://floci:4566
       # Pre-signed URLs are opened from the host (browser, tests), not from inside Docker.
-      ORDERFLOW_AWS_PUBLIC_ENDPOINT: http://localhost:4566
+      ORDERFLOW_AWS_PUBLIC_ENDPOINT: http://localhost:${FLOCI_PORT:-4566}
       ORDERFLOW_ADMIN_ENABLED: ${ORDERFLOW_ADMIN_ENABLED:-true}
       ORDERFLOW_PROCESSOR_DELAY_MS: ${ORDERFLOW_PROCESSOR_DELAY_MS:-0}
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/q/health/ready >/dev/null || exit 1"]
       interval: 2s
@@ -58,4 +60,4 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "4200:80"
+      - "${FRONTEND_PORT:-4200}:80"
