@@ -1,5 +1,5 @@
 diff --git a/app/frontend/src/app/catalog/catalog-page.ts b/app/frontend/src/app/catalog/catalog-page.ts
-index 5792d17..332acbf 100644
+index 5792d17..ef3b5b8 100644
 --- a/app/frontend/src/app/catalog/catalog-page.ts
 +++ b/app/frontend/src/app/catalog/catalog-page.ts
 @@ -48,7 +48,7 @@ export class CatalogPage implements OnInit {
@@ -7,7 +7,7 @@ index 5792d17..332acbf 100644
    private loadImage(productId: string): void {
      this.api.productImage(productId).subscribe({
 -      next: (image) => this.imageUrls.update((urls) => ({ ...urls, [productId]: image.url })),
-+      next: (image) => this.imageUrls.update((urls) => ({ ...urls, [productId]: image.url + '-missing' })),
++      next: (image) => this.imageUrls.update((urls) => ({ ...urls, [productId]: image.url.replace('/images/', '/missing-images/') })),
        error: () => this.markBroken(productId),
      });
    }
