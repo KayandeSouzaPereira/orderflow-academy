@@ -36,6 +36,7 @@ practice_title() {
     no-quarkus-test) echo "Unit tests do not start Quarkus" ;;
     starter-fixed) echo "The starter tests were fixed" ;;
     tdd-history) echo "Tests come before or with the code (Git history)" ;;
+    traceability) echo "Every manual case has an automated test" ;;
     *) echo "$1" ;;
   esac
 }
@@ -53,6 +54,7 @@ practice_hint() {
     no-quarkus-test) echo "Build the class under test with 'new' and Mockito mocks; @QuarkusTest belongs to integration tests." ;;
     starter-fixed) echo "Copy the starter test into your package and fix all three problems: missing assertion, two behaviours in one test, generic name." ;;
     tdd-history) echo "Commit a failing test first (or together with the code), then the code that makes it pass. Small commits make this visible." ;;
+    traceability) echo "Give every manual case a heading with its id (## MC-01 ...) and tag at least one test with @Tag(\"MC-01\")." ;;
     *) echo "See the topic README." ;;
   esac
 }
@@ -304,6 +306,32 @@ practice_tdd_history() {
   local percent=$(( ok_commits * 100 / impl_commits ))
   (( percent >= min_percent )) && return 0
   PRACTICE_DETAIL="${ok_commits} of ${impl_commits} implementation commits had a test first (${percent}%, need ${min_percent}%)"
+  return 1
+}
+
+# Parameters: cases_file (repo-relative Markdown file with one heading per
+# manual case, e.g. "## MC-01 Order with an invalid e-mail"), min_cases.
+# Every case id must appear in at least one @Tag("MC-XX") of the topic's tests.
+practice_traceability() {
+  local cases_file min_cases ids id missing=() count
+  cases_file="$(practice_param '.cases_file')"
+  min_cases="$(practice_param '.min_cases')"
+  min_cases="${min_cases:-10}"
+  if [[ ! -f "${REVIEW_WORKSPACE}/${cases_file}" ]]; then
+    PRACTICE_DETAIL="${cases_file} not found"
+    return 1
+  fi
+  ids="$(grep -oE '^#+[[:space:]]+MC-[0-9]{2}' "${REVIEW_WORKSPACE}/${cases_file}" | grep -oE 'MC-[0-9]{2}' | sort -u)"
+  count="$(grep -c . <<<"$ids" || true)"
+  for id in $ids; do
+    grep -qE "@Tag[(][[:space:]]*\"${id}\"[[:space:]]*[)]" "${PRACTICE_FILES[@]}" || missing+=("$id")
+  done
+  local problems=()
+  (( count >= min_cases )) || problems+=("${count} manual cases, expected at least ${min_cases}")
+  (( ${#missing[@]} == 0 )) || problems+=("no @Tag test for $(printf '%s ' "${missing[@]}")")
+  (( ${#problems[@]} == 0 )) && return 0
+  PRACTICE_DETAIL="$(printf '%s; ' "${problems[@]}")"
+  PRACTICE_DETAIL="${PRACTICE_DETAIL%; }"
   return 1
 }
 

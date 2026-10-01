@@ -246,14 +246,38 @@ standard__swap_back() {
 STANDARD_BUGS_VALID=0
 STANDARD_BUGS_DETECTED=0
 
+# Bug folders of the topic plus, with topic.yml 'bug_sources', those of other
+# topics (B-09 reuses the banks of B-03 to B-07).
+standard__bug_dirs() {
+  local topic_dir="$1" source
+  bugbank_list "$topic_dir"
+  while IFS= read -r source; do
+    [[ -n "$source" ]] || continue
+    [[ -d "${SCORE_REPO_ROOT}/tracks/${source}" ]] || score_fatal "bug source '${source}' not found" \
+      "Check bug_sources in topic.yml."
+    bugbank_list "${SCORE_REPO_ROOT}/tracks/${source}"
+  done < <(topic '(.bug_sources // [])[]')
+}
+
+# Bug id shown in the report: BUG-NN, or BUG-<topic id>-NN for borrowed bugs.
+standard__bug_id() {
+  local topic_dir="$1" bug_dir="$2" owner
+  owner="$(cd "${bug_dir}/../.." && pwd)"
+  if [[ "$owner" == "$(cd "$topic_dir" && pwd)" ]]; then
+    basename "$bug_dir"
+  else
+    printf 'BUG-%s-%s' "$(yq -r '.id' "${owner}/topic.yml")" "$(basename "$bug_dir" | sed 's/^BUG-//')"
+  fi
+}
+
 standard__bug_bank() {
   local topic_dir="$1" bug_dir id title hint side status index=0 total
   local -a bugs
-  mapfile -t bugs < <(bugbank_list "$topic_dir")
+  mapfile -t bugs < <(standard__bug_dirs "$topic_dir")
   total=${#bugs[@]}
   for bug_dir in "${bugs[@]}"; do
     index=$(( index + 1 ))
-    id="$(basename "$bug_dir")"
+    id="$(standard__bug_id "$topic_dir" "$bug_dir")"
     title="$(bugbank_field "$bug_dir" title)"
     hint="$(bugbank_field "$bug_dir" hint)"
     side="$(bugbank_field "$bug_dir" side)"
