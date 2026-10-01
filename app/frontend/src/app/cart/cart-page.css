@@ -1,0 +1,47 @@
+.lines {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.lines th,
+.lines td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.lines input {
+  width: 4.5rem;
+}
+
+.subtotal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.checkout {
+  display: grid;
+  gap: 0.4rem;
+  max-width: 360px;
+  margin-top: 1.5rem;
+}
+
+.checkout h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  min-height: 1.2em;
+  margin: 0;
+}

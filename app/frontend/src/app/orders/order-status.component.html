@@ -1,0 +1,63 @@
+@if (notFound()) {
+  <h1>Order not found</h1>
+  <p role="alert" class="error">No order with ID {{ id() }}.</p>
+} @else if (order(); as order) {
+  @if (justCreated()) {
+    <p role="status" class="success">Order created! Your order ID is <code>{{ order.id }}</code>.</p>
+  }
+
+  <h1>Order details</h1>
+
+  <dl class="summary">
+    <dt>Order ID</dt>
+    <dd><code>{{ order.id }}</code></dd>
+    <dt>Status</dt>
+    <dd><span [class]="'status status-' + order.status.toLowerCase()" aria-live="polite">{{ order.status }}</span></dd>
+    <dt>E-mail</dt>
+    <dd>{{ order.customerEmail }}</dd>
+    <dt>Total</dt>
+    <dd>{{ order.totalInCents | money }}</dd>
+  </dl>
+
+  <table class="items">
+    <caption>Items</caption>
+    <thead>
+      <tr>
+        <th scope="col">Product</th>
+        <th scope="col">Quantity</th>
+        <th scope="col">Unit price</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of order.items; track $index) {
+        <tr>
+          <td>{{ item.productId }}</td>
+          <td>{{ item.quantity }}</td>
+          <td>{{ item.unitPriceInCents | money }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="actions">
+    @if (order.status === 'PENDING') {
+      <p class="hint">Waiting for confirmation…</p>
+      <button type="button" class="danger" [disabled]="cancelling()" (click)="cancel()">Cancel order</button>
+    }
+    @if (order.status === 'CONFIRMED' && invoiceUrl()) {
+      <a class="button" [href]="invoiceUrl()" target="_blank" rel="noopener">Download invoice</a>
+    }
+  </div>
+
+  @if (actionError()) {
+    <p role="alert" class="error">{{ actionError() }}</p>
+  }
+} @else if (loadError()) {
+  <p role="alert" class="error">{{ loadError() }}</p>
+} @else {
+  <p role="status" class="loading">Loading order…</p>
+}
+
+@if (order() && loadError()) {
+  <p role="alert" class="error">{{ loadError() }}</p>
+}

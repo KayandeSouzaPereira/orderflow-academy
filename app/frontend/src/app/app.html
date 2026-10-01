@@ -1,0 +1,14 @@
+<header class="topbar">
+  <a class="brand" routerLink="/">OrderFlow</a>
+  <nav aria-label="Main">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Catalog</a>
+    <a routerLink="/cart" routerLinkActive="active">Cart ({{ cart.count() }})</a>
+    <a routerLink="/orders" routerLinkActive="active">Track order</a>
+  </nav>
+</header>
+
+<main class="content">
+  <router-outlet />
+</main>
+
+<footer class="footer">OrderFlow is a fictional store used for test-automation training.</footer>

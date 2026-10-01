@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" role="img" aria-label="HD Webcam">
+<rect width="400" height="300" fill="#dc2626"/>
+<circle cx="340" cy="60" r="90" fill="#ffffff" fill-opacity="0.12"/>
+<circle cx="40" cy="270" r="70" fill="#ffffff" fill-opacity="0.10"/>
+<text x="200" y="160" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#ffffff">HD Webcam</text>
+<text x="200" y="260" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#ffffff" fill-opacity="0.8">OrderFlow</text>
+</svg>

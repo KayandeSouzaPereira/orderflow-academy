@@ -1,0 +1,36 @@
+<h1>Catalog</h1>
+
+@if (loading()) {
+  <p role="status" class="loading">Loading products…</p>
+} @else if (error()) {
+  <p role="alert" class="error">{{ error() }}</p>
+} @else if (products().length === 0) {
+  <p>No products available.</p>
+} @else {
+  <ul class="grid" aria-label="Products">
+    @for (product of products(); track product.id) {
+      <li class="card">
+        <article [attr.aria-labelledby]="'product-' + product.id">
+          <div class="image">
+            @if (brokenImages()[product.id]) {
+              <span class="no-image">Image unavailable</span>
+            } @else if (imageUrls()[product.id]; as url) {
+              <img [src]="url" [alt]="product.name" width="400" height="300" (error)="markBroken(product.id)" />
+            }
+          </div>
+          <h2 [id]="'product-' + product.id">{{ product.name }}</h2>
+          <p class="description">{{ product.description }}</p>
+          <p class="price">{{ product.priceInCents | money }}</p>
+          @if (product.stock > 0) {
+            <p class="stock in-stock">In stock ({{ product.stock }})</p>
+          } @else {
+            <p class="stock out-of-stock">Out of stock</p>
+          }
+          <button type="button" [disabled]="product.stock <= 0" (click)="addToCart(product)">Add to cart</button>
+        </article>
+      </li>
+    }
+  </ul>
+}
+
+<p class="visually-hidden" aria-live="polite">{{ lastAdded() }}</p>
