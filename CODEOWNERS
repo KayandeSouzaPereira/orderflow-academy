@@ -1,0 +1,11 @@
+# Everything that decides or explains a score belongs to the maintainer.
+# Combined with the "require review from code owners" rule of the main ruleset
+# (see docs/GITHUB-SETUP.md), no change to these paths reaches main without
+# the maintainer's review.
+/scripts/                  @KayandeSouzaPereira
+/tracks/**/bugs/           @KayandeSouzaPereira
+/tracks/**/review.sh       @KayandeSouzaPereira
+/tracks/**/topic.yml       @KayandeSouzaPereira
+/.github/                  @KayandeSouzaPereira
+/CODEOWNERS                @KayandeSouzaPereira
+/docs/                     @KayandeSouzaPereira

@@ -2,17 +2,25 @@
 # and docs/ is replaced with the version from main before an official review
 # (scripts/ci/sanitize.sh), so production code and the scoring tools can never
 # influence a score. One repo-relative path per line; a trailing slash means a
-# folder. Lines starting with # are comments.
+# folder. Lines starting with # are comments. A line starting with "!" puts
+# main's version of a file back (applied after all the others), for files
+# inside a participant folder that must not change: "!path" takes it from the
+# same path in main, "!path=other/path" from another file of main (used when
+# the file only exists as a starter).
 app/backend/src/test/java/dev/orderflow/tracks/
 app/api-tests/src/test/java/dev/orderflow/apitests/tracks/
 app/api-tests/manual-cases.md
 app/api-tests/TEAM-NOTES.md
 app/api-tests/docs/
-app/exercises/src/
 app/e2e/tests/tracks/
 app/frontend/src/app/cart/cart.service.spec.ts
 app/frontend/src/app/orders/order-status.component.spec.ts
-# A-03 (TDD kata): the participant's own implementation.
+# B-01: the exercises and the participant's own tests; the data model is fixed.
+app/exercises/src/
+!app/exercises/src/main/java/dev/orderflow/exercises/Model.java
+# A-03 (TDD kata): the participant's own implementation; the public API classes are fixed.
 app/backend/src/main/java/dev/orderflow/domain/coupon/
+!app/backend/src/main/java/dev/orderflow/domain/coupon/Coupon.java=tracks/a-unit-testing/03-tdd-kata/starter/Coupon.java
+!app/backend/src/main/java/dev/orderflow/domain/coupon/CouponException.java=tracks/a-unit-testing/03-tdd-kata/starter/CouponException.java
 # 00-fundamentals
 tracks/00-fundamentals/answers.yml

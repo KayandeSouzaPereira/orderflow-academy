@@ -100,7 +100,9 @@ runner_e2e_dependencies() {
     fi
   fi
   score_progress "making sure Chromium is installed for Playwright"
-  runner__playwright_cli install chromium >"${REVIEW_WORKSPACE}/playwright-install.log" 2>&1 \
+  # CI sets REVIEW_PLAYWRIGHT_WITH_DEPS=1 to also install the system libraries (needs sudo).
+  # shellcheck disable=SC2086 # the flag must disappear when the variable is empty
+  runner__playwright_cli install ${REVIEW_PLAYWRIGHT_WITH_DEPS:+--with-deps} chromium >"${REVIEW_WORKSPACE}/playwright-install.log" 2>&1 \
     || score_fatal "Playwright could not install Chromium" "Run 'npx playwright install chromium' in app/e2e."
 }
 

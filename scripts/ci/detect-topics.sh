@@ -25,6 +25,14 @@ for tool in git jq yq; do
   command -v "$tool" >/dev/null || { echo "detect-topics: ${tool} not found" >&2; exit 3; }
 done
 
+# Native jq.exe/yq.exe on Windows end lines with CRLF (same fix as score.sh).
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*)
+    jq() { command jq "$@" | tr -d '\r'; }
+    yq() { command yq "$@" | tr -d '\r'; }
+    ;;
+esac
+
 mapfile -t ALL < <(find "${ROOT}/tracks" -name topic.yml -not -path '*/bugs/*' \
   | sed -e "s#^${ROOT}/tracks/##" -e 's#/topic.yml$##' | grep -v '^_' | sort)
 
@@ -69,8 +77,11 @@ watched() {
       echo "app/backend/src/test/java/${package//.//}/"
       jq -r '.implementation_swap.path // empty' <<<"$json" ;;
     api) echo "app/api-tests/src/test/java/${package//.//}/" ;;
-    frontend) jq -r '(.test_files // [])[] | "app/frontend/" + .' <<<"$json" ;;
-    e2e) jq -r '"app/e2e/" + (.test_dir // "") + "/"' <<<"$json" ;;
+    frontend)
+      while IFS= read -r spec; do
+        [[ -n "$spec" ]] && echo "app/frontend/${spec}"
+      done < <(jq -r '(.test_files // [])[]' <<<"$json") ;;
+    e2e) echo "app/e2e/$(jq -r '.test_dir // ""' <<<"$json")/" ;;
   esac
   jq -r '(.watch_paths // [])[]' <<<"$json"
 }

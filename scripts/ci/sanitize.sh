@@ -32,8 +32,13 @@ for dir in scripts tracks docs app; do
 done
 
 restored=0
+pinned=()
 while IFS= read -r path; do
   [[ -z "$path" || "$path" == \#* ]] && continue
+  if [[ "$path" == '!'* ]]; then
+    pinned+=("${path#!}")
+    continue
+  fi
   path="${path%/}"
   # Taken from the participant's commit only when it exists there.
   if git -C "$WORK" cat-file -e "${HEAD_SHA}:${path}" 2>/dev/null; then
@@ -45,5 +50,18 @@ while IFS= read -r path; do
     restored=$(( restored + 1 ))
   fi
 done <"$PATHS_FILE"
+
+# Files inside a participant folder that must stay as in main ("dest" or "dest=source").
+for entry in "${pinned[@]}"; do
+  path="${entry%%=*}"
+  source_path="${entry#*=}"
+  [[ "$entry" == *=* ]] || source_path="$path"
+  if [[ -e "${TRUSTED}/${source_path}" ]]; then
+    mkdir -p "$(dirname "${WORK}/${path}")"
+    cp -R "${TRUSTED}/${source_path}" "${WORK}/${path}"
+  else
+    rm -rf "${WORK:?}/${path}"
+  fi
+done
 
 echo "sanitize: scripts/, tracks/, docs/ and app/ come from main; ${restored} participant path(s) restored from ${HEAD_SHA:0:7}"
