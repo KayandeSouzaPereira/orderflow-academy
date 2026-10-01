@@ -1,0 +1,6 @@
+id: BUG-04
+title: "Prices are serialised in reais instead of cents"
+hint: "Create a product with a known price (with cents) and read it back."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/api/dto/ProductResponse.java

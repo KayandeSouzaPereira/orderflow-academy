@@ -1,0 +1,12 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/Order.java b/app/backend/src/main/java/dev/orderflow/domain/Order.java
+index 4f2654f..48bc934 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/Order.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/Order.java
+@@ -23,6 +23,6 @@ public record Order(
+     }
+ 
+     public Order confirmedWithInvoice(String newInvoiceKey, Instant at) {
+-        return new Order(id, customerEmail, items, totalInCents, OrderStatus.CONFIRMED, newInvoiceKey, createdAt, at);
++        return new Order(id, customerEmail, items, 0, OrderStatus.CONFIRMED, newInvoiceKey, createdAt, at);
+     }
+ }

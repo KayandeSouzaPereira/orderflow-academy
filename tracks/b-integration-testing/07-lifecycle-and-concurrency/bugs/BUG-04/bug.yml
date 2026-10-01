@@ -1,0 +1,6 @@
+id: BUG-04
+title: "Orders are confirmed without an invoice being stored"
+hint: "A confirmed order promises an invoice: download it."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/ProcessOrderCreatedUseCase.java

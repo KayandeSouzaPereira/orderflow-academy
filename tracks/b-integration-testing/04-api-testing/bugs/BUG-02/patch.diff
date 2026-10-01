@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java b/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java
+index ea682d4..dfb0501 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java
+@@ -27,7 +27,7 @@ public class OrderValidator {
+             if (item == null || item.productId() == null || item.productId().isBlank()) {
+                 throw invalid("Every item must have a productId.");
+             }
+-            if (item.quantity() < MIN_QUANTITY || item.quantity() > MAX_QUANTITY) {
++            if (item.quantity() < MIN_QUANTITY || item.quantity() > MAX_QUANTITY + 1) {
+                 throw invalid("quantity must be between " + MIN_QUANTITY + " and " + MAX_QUANTITY + ".");
+             }
+         }

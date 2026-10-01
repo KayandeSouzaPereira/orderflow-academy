@@ -1,0 +1,6 @@
+id: BUG-04
+title: "A confirmed order shows a total of zero"
+hint: "Check every field of the order after it is confirmed, not only the status."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/Order.java

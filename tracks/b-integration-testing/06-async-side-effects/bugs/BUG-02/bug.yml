@@ -1,0 +1,6 @@
+id: BUG-02
+title: "The invoice is stored under the wrong key, so its URL answers 404"
+hint: "Do not stop at the invoice URL: download it."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/s3/S3InvoiceStorage.java

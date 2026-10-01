@@ -1,0 +1,6 @@
+id: BUG-02
+title: "A quantity of 11 is accepted"
+hint: "Test both edges of the allowed range, inside and outside."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java

@@ -1,0 +1,6 @@
+id: BUG-02
+title: "A CONFIRMED order can be cancelled"
+hint: "Wait until an order is confirmed, then try to cancel it."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java

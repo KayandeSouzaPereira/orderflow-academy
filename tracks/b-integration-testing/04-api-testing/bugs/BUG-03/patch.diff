@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/api/error/ErrorMappers.java b/app/backend/src/main/java/dev/orderflow/api/error/ErrorMappers.java
+index 01e3b29..10b5afa 100644
+--- a/app/backend/src/main/java/dev/orderflow/api/error/ErrorMappers.java
++++ b/app/backend/src/main/java/dev/orderflow/api/error/ErrorMappers.java
+@@ -20,7 +20,7 @@ public class ErrorMappers {
+ 
+     @ServerExceptionMapper
+     public Response domain(DomainException e) {
+-        return error(statusOf(e.code()), e.code().name(), e.getMessage());
++        return error(statusOf(e.code()), null, e.getMessage());
+     }
+ 
+     @ServerExceptionMapper

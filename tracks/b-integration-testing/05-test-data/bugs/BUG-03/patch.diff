@@ -1,0 +1,14 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java b/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java
+index c7d11f7..cc13767 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java
+@@ -41,9 +41,6 @@ public class CancelOrderUseCase {
+                     "Order " + orderId + " is no longer PENDING.");
+         }
+ 
+-        for (OrderItem item : order.items()) {
+-            products.releaseStock(item.productId(), item.quantity());
+-        }
+         return cancelled;
+     }
+ }

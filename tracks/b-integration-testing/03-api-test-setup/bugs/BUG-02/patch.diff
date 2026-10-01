@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/ProductCatalog.java b/app/backend/src/main/java/dev/orderflow/application/ProductCatalog.java
+index 1d02c86..09e3c84 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/ProductCatalog.java
++++ b/app/backend/src/main/java/dev/orderflow/application/ProductCatalog.java
+@@ -35,7 +35,7 @@ public class ProductCatalog {
+     }
+ 
+     public Product get(String productId) {
+-        return products.findById(productId).orElseThrow(() -> notFound(productId));
++        return products.findById(productId).orElseThrow();
+     }
+ 
+     public PresignedUrl imageUrl(String productId) {

@@ -1,0 +1,6 @@
+id: BUG-01
+title: "The product list comes back empty"
+hint: "The seed has 10 products: check what the list contains, not only the status code."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/api/ProductResource.java

@@ -1,0 +1,6 @@
+id: BUG-02
+title: "An unknown product id answers 500 instead of 404"
+hint: "Ask for a product that does not exist and check status and error body."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/ProductCatalog.java

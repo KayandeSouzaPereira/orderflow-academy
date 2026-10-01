@@ -1,0 +1,6 @@
+id: BUG-02
+title: "Creating an order does not take units from the stock"
+hint: "Read the product stock before and after an order."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java

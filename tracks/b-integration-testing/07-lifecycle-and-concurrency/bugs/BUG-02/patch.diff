@@ -1,0 +1,16 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java b/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java
+index c7d11f7..41c1638 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java
+@@ -32,10 +32,9 @@ public class CancelOrderUseCase {
+                 .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND,
+                         "Order " + orderId + " does not exist."));
+ 
+-        stateMachine.ensureCanTransition(order.status(), OrderStatus.CANCELLED);
+ 
+         Order cancelled = order.withStatus(OrderStatus.CANCELLED, clock.instant());
+-        if (!orders.replaceIfStatus(cancelled, OrderStatus.PENDING)) {
++        if (!orders.replaceIfStatus(cancelled, order.status())) {
+             // The processor confirmed it between our read and our write.
+             throw new DomainException(ErrorCode.INVALID_ORDER_TRANSITION,
+                     "Order " + orderId + " is no longer PENDING.");

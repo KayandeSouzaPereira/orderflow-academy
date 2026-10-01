@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/infrastructure/s3/S3InvoiceStorage.java b/app/backend/src/main/java/dev/orderflow/infrastructure/s3/S3InvoiceStorage.java
+index 0278ae7..d46d8a9 100644
+--- a/app/backend/src/main/java/dev/orderflow/infrastructure/s3/S3InvoiceStorage.java
++++ b/app/backend/src/main/java/dev/orderflow/infrastructure/s3/S3InvoiceStorage.java
+@@ -28,7 +28,7 @@ public class S3InvoiceStorage implements InvoiceStorage {
+     public void store(String key, byte[] pdf) {
+         s3.putObject(PutObjectRequest.builder()
+                         .bucket(bucket)
+-                        .key(key)
++                        .key("tmp/" + key)
+                         .contentType(PDF_CONTENT_TYPE)
+                         .build(),
+                 RequestBody.fromBytes(pdf));

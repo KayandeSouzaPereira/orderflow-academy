@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/api/OrderResource.java b/app/backend/src/main/java/dev/orderflow/api/OrderResource.java
+index 86cf10c..dbb9470 100644
+--- a/app/backend/src/main/java/dev/orderflow/api/OrderResource.java
++++ b/app/backend/src/main/java/dev/orderflow/api/OrderResource.java
+@@ -58,7 +58,7 @@ public class OrderResource {
+             throw new DomainException(ErrorCode.VALIDATION_ERROR, "Request body is required.");
+         }
+         Order order = createOrder.execute(request.toCommand());
+-        return Response.created(uriInfo.getAbsolutePathBuilder().path(order.id()).build())
++        return Response.ok()
+                 .entity(OrderResponse.from(order))
+                 .build();
+     }

@@ -1,0 +1,6 @@
+id: BUG-03
+title: "The invoice is served without the application/pdf Content-Type"
+hint: "A downloaded file has headers too: check what kind of file you got."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/s3/S3InvoiceStorage.java
