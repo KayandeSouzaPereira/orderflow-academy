@@ -1,0 +1,5 @@
+id: b01
+title: Java basics for testers
+track: b-integration-testing
+kind: custom
+pass_threshold: 70

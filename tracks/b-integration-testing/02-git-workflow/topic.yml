@@ -1,0 +1,20 @@
+id: b02
+title: Git workflow - branches, commits, conflicts and pull requests
+track: b-integration-testing
+kind: custom
+pass_threshold: 70
+git:
+  notes_file: app/api-tests/TEAM-NOTES.md
+  # The line both exercise branches change, after the conflict is resolved.
+  expected_line: "- API base URL: http://localhost:8080 (set API_BASE_URL to change it; review stack: http://localhost:18080)"
+  exercise_branches: [exercise/b02-conflict-a, exercise/b02-conflict-b]
+  topic_branch: b02                # the merged branch name contains this
+  min_commits: 2
+  conventional_percent: 80
+  # Where a participant's commits may change files.
+  allowed_paths:
+    - app/api-tests/
+    - app/exercises/
+    - app/e2e/tests/
+    - tracks/00-fundamentals/answers.yml
+    - .github/workflows/
