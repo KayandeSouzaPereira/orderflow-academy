@@ -79,6 +79,26 @@ validate_topic_yml() {
   fi
 }
 
+# patch_applies <topic-dir> <patch>: checks the patch against the current tree,
+# or, for topics with implementation_swap (TDD kata), against the reference
+# implementation the review swaps in.
+patch_applies() {
+  local topic_dir="$1" patch="$2" swap_path swap_reference tmp status=0
+  swap_path="$(yq -r '.implementation_swap.path // ""' "${topic_dir}/topic.yml")"
+  if [[ -z "$swap_path" ]]; then
+    git -C "$ROOT" apply --check "$patch" 2>/dev/null
+    return
+  fi
+  swap_reference="${topic_dir}/$(yq -r '.implementation_swap.reference // ""' "${topic_dir}/topic.yml")"
+  [[ -f "$swap_reference" ]] || return 1
+  tmp="$(mktemp -d "${TMPDIR:-/tmp}/orderflow-patch.XXXXXX")"
+  mkdir -p "${tmp}/$(dirname "$swap_path")"
+  cp "$swap_reference" "${tmp}/${swap_path}"
+  (cd "$tmp" && git apply --check "$patch" 2>/dev/null) || status=$?
+  rm -rf "$tmp"
+  return "$status"
+}
+
 validate_bugs() {
   local topic="$1" dir="${ROOT}/tracks/$1" bug_dir id field side count=0 min max kind
   kind="$(yq -r '.kind // ""' "${dir}/topic.yml" 2>/dev/null || true)"
@@ -101,7 +121,7 @@ validate_bugs() {
     fi
     if [[ ! -s "${bug_dir}/patch.diff" ]]; then
       error "${topic}/${id}" "missing or empty patch.diff"
-    elif ! git -C "$ROOT" apply --check "${bug_dir}/patch.diff" 2>/dev/null; then
+    elif ! patch_applies "$dir" "${bug_dir}/patch.diff"; then
       error "${topic}/${id}" "patch.diff does not apply to the current tree"
     elif git -C "$ROOT" apply --numstat "${bug_dir}/patch.diff" | cut -f3 \
       | grep -qE '/src/test/|\.spec\.ts$|^app/(api-tests|e2e)/'; then

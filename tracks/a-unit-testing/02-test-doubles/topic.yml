@@ -1,0 +1,21 @@
+id: a02
+title: Test doubles - order use cases with Mockito
+track: a-unit-testing
+kind: backend
+test_package: dev.orderflow.tracks.a02
+requires_stack: false
+pass_threshold: 70
+weights: { bugs: 50, mutation: 25, practices: 25 }
+mutation:
+  target_classes:
+    - dev.orderflow.application.CreateOrderUseCase
+    - dev.orderflow.application.CancelOrderUseCase
+  target_score: 80
+practices:
+  - no-thread-sleep
+  - no-disabled-tests
+  - every-test-asserts
+  - naming-convention
+  - random-order-stable
+  - no-quarkus-test
+timeouts: { test_run_seconds: 300 }

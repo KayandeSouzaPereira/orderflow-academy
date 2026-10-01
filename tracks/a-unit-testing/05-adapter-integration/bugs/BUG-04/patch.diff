@@ -1,0 +1,17 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
+index 98d74e8..10262e6 100644
+--- a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
++++ b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
+@@ -65,11 +65,8 @@ public class DynamoOrderRepository implements OrderRepository {
+ 
+     @Override
+     public List<Order> findByCustomerEmail(String customerEmail) {
+-        return dynamo.queryPaginator(QueryRequest.builder()
++        return dynamo.scanPaginator(software.amazon.awssdk.services.dynamodb.model.ScanRequest.builder()
+                         .tableName(table)
+-                        .indexName(customerIndex)
+-                        .keyConditionExpression("customerEmail = :e")
+-                        .expressionAttributeValues(Map.of(":e", s(customerEmail)))
+                         .build())
+                 .items().stream()
+                 .map(DynamoOrderRepository::toOrder)

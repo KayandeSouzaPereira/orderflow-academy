@@ -1,0 +1,6 @@
+id: BUG-04
+title: "The per-customer query returns every customer's orders"
+hint: "Store orders for two customers and query one of them."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java

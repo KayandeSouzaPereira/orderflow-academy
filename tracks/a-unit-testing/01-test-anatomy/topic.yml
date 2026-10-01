@@ -1,0 +1,22 @@
+id: a01
+title: Test anatomy - pricing rules
+track: a-unit-testing
+kind: backend
+test_package: dev.orderflow.tracks.a01
+requires_stack: false
+pass_threshold: 70
+weights: { bugs: 50, mutation: 25, practices: 25 }
+mutation:
+  target_classes: ["dev.orderflow.domain.OrderPricing"]
+  target_score: 80
+practices:
+  - no-thread-sleep
+  - no-disabled-tests
+  - every-test-asserts
+  - naming-convention
+  - random-order-stable
+  - rule: starter-fixed
+    file: OrderPricingStarterTest.java
+    forbidden_names: [test1, shouldApplyDiscountAndRoundDown]
+    min_tests: 4
+timeouts: { test_run_seconds: 300 }

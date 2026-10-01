@@ -1,0 +1,6 @@
+id: BUG-04
+title: "An unknown product is reported as out of stock instead of not found"
+hint: "Check the error code, not only that an exception is thrown."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

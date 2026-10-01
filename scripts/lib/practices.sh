@@ -8,10 +8,17 @@
 #   practice_run <rule>        runs one rule
 #   practice_hint <rule>       one-line, actionable hint (English)
 #   practice_title <rule>      short description of the rule
+#
+# Rules with parameters read them from PRACTICE_RULE_JSON, the rule's entry in
+# topic.yml (e.g. {"rule": "starter-fixed", "file": "X.java"}).
 # -----------------------------------------------------------------------------
 
 PRACTICE_FILES=()
 PRACTICE_DETAIL=""
+PRACTICE_RULE_JSON='{}'
+# Rules that read the Git history: skipped when reviewing an overlay
+# (reference or calibration solutions have no history of their own).
+PRACTICE_HISTORY_RULES=" tdd-history "
 # EREs below avoid backslashes ([(] instead of \(): awk -v would eat them.
 PRACTICE_ASSERTIONS='assertThat|assert[A-Z][A-Za-z]*[[:space:]]*[(]|verify[A-Za-z]*[[:space:]]*[(]|[.]statusCode[[:space:]]*[(]|[.]body[[:space:]]*[(]|expect[[:space:]]*[(]'
 PRACTICE_SEEDS=(20261001 4242)
@@ -26,6 +33,9 @@ practice_title() {
     random-order-stable) echo "Tests pass in random order" ;;
     idempotent-data) echo "Tests pass twice on the same environment" ;;
     black-box-only) echo "Only the public API is used" ;;
+    no-quarkus-test) echo "Unit tests do not start Quarkus" ;;
+    starter-fixed) echo "The starter tests were fixed" ;;
+    tdd-history) echo "Tests come before or with the code (Git history)" ;;
     *) echo "$1" ;;
   esac
 }
@@ -40,12 +50,24 @@ practice_hint() {
     random-order-stable) echo "A test relies on state left by another one. Give each test its own data and no shared mutable fields." ;;
     idempotent-data) echo "Running the suite again fails. Create unique data per run (new products, random e-mails) instead of fixed ids." ;;
     black-box-only) echo "Talk to the system only through HTTP: no backend classes, no AWS SDK, no direct database checks." ;;
+    no-quarkus-test) echo "Build the class under test with 'new' and Mockito mocks; @QuarkusTest belongs to integration tests." ;;
+    starter-fixed) echo "Copy the starter test into your package and fix all three problems: missing assertion, two behaviours in one test, generic name." ;;
+    tdd-history) echo "Commit a failing test first (or together with the code), then the code that makes it pass. Small commits make this visible." ;;
     *) echo "See the topic README." ;;
   esac
 }
 
 practice_known() {
   declare -F "practice_${1//-/_}" >/dev/null
+}
+
+practice_is_history_rule() {
+  [[ "$PRACTICE_HISTORY_RULES" == *" $1 "* ]]
+}
+
+# Reads a parameter of the current rule (empty when missing).
+practice_param() {
+  jq -r "$1 // empty" <<<"$PRACTICE_RULE_JSON"
 }
 
 practice_run() {
@@ -161,6 +183,85 @@ practice_black_box_only() {
   [[ -n "$imports" ]] && problems="${problems:+${problems}; }${imports//$'\n'/, }"
   [[ -z "$problems" ]] && return 0
   PRACTICE_DETAIL="$problems"
+  return 1
+}
+
+practice_no_quarkus_test() {
+  local hits
+  hits="$(practice__grep '@Quarkus(Test|IntegrationTest|ComponentTest|MainTest)|@InjectMock|@TestHTTPEndpoint')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# Parameters: file (test class copied from starter/), forbidden_names (original
+# method names that must be gone), min_tests (at least this many tests in it).
+practice_starter_fixed() {
+  local name file="" candidate methods missing wrong forbidden min_tests count
+  name="$(practice_param '.file')"
+  for candidate in "${PRACTICE_FILES[@]}"; do
+    [[ "${candidate##*/}" == "$name" ]] && file="$candidate"
+  done
+  if [[ -z "$file" ]]; then
+    PRACTICE_DETAIL="${name} not found in your package (copy it from starter/)"
+    return 1
+  fi
+  # Arrays cannot be passed as a temporary prefix: swap them explicitly.
+  local -a all_files=("${PRACTICE_FILES[@]}")
+  PRACTICE_FILES=("$file")
+  methods="$(practice__java_tests)"
+  PRACTICE_FILES=("${all_files[@]}")
+  missing="$(awk -F'\t' '$2 == 0 { print $1 }' <<<"$methods")"
+  wrong="$(cut -f1 <<<"$methods" | grep -vE '^should[A-Z][A-Za-z0-9]*When[A-Z][A-Za-z0-9]*$' || true)"
+  forbidden="$(practice_param '.forbidden_names // [] | .[]' | grep -xF -f - <(cut -f1 <<<"$methods") || true)"
+  min_tests="$(practice_param '.min_tests')"
+  count="$(grep -c . <<<"$methods" || true)"
+  local problems=()
+  local nl=$'\n'
+  [[ -n "$missing" ]] && problems+=("no assertion: ${missing//"$nl"/, }")
+  [[ -n "$wrong" ]] && problems+=("generic names: ${wrong//"$nl"/, }")
+  [[ -n "$forbidden" ]] && problems+=("still there: ${forbidden//"$nl"/, }")
+  if [[ -n "$min_tests" ]] && (( count < min_tests )); then
+    problems+=("${count} tests, expected at least ${min_tests} (split tests that check two things)")
+  fi
+  (( ${#problems[@]} == 0 )) && return 0
+  PRACTICE_DETAIL="$(printf '%s; ' "${problems[@]}")"
+  PRACTICE_DETAIL="${PRACTICE_DETAIL%; }"
+  return 1
+}
+
+# Parameters: implementation (repo-relative path of the production file),
+# min_percent (default 60). For every commit that changes the implementation,
+# the topic's tests must change in the same commit or in the commit just
+# before it (among the commits touching either).
+practice_tdd_history() {
+  local implementation min_percent tests_path commit files touches_impl touches_tests
+  local previous_tests=0 impl_commits=0 ok_commits=0
+  implementation="$(practice_param '.implementation')"
+  min_percent="$(practice_param '.min_percent')"
+  min_percent="${min_percent:-60}"
+  tests_path="${RUNNER_TEST_DIR#"${REVIEW_WORKSPACE}/"}"
+
+  while read -r commit; do
+    [[ -z "$commit" ]] && continue
+    files="$(git -C "$SCORE_REPO_ROOT" show --name-only --format= "$commit")"
+    touches_impl=0 touches_tests=0
+    grep -qxF "$implementation" <<<"$files" && touches_impl=1
+    grep -q "^${tests_path}/" <<<"$files" && touches_tests=1
+    if (( touches_impl )); then
+      impl_commits=$(( impl_commits + 1 ))
+      (( touches_tests || previous_tests )) && ok_commits=$(( ok_commits + 1 ))
+    fi
+    previous_tests=$(( touches_tests && ! touches_impl ))
+  done < <(git -C "$SCORE_REPO_ROOT" log --reverse --format=%H -- "$implementation" "$tests_path" 2>/dev/null)
+
+  if (( impl_commits == 0 )); then
+    PRACTICE_DETAIL="no commit changes ${implementation##*/} yet (commit your work)"
+    return 1
+  fi
+  local percent=$(( ok_commits * 100 / impl_commits ))
+  (( percent >= min_percent )) && return 0
+  PRACTICE_DETAIL="${ok_commits} of ${impl_commits} implementation commits had a test first (${percent}%, need ${min_percent}%)"
   return 1
 }
 

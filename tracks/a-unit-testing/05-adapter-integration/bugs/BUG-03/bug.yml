@@ -1,0 +1,6 @@
+id: BUG-03
+title: "Invoices are stored without the application/pdf content type"
+hint: "Look at the object's metadata in the bucket, not only at its bytes."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/s3/S3InvoiceStorage.java

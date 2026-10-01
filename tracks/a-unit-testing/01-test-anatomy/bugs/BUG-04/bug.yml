@@ -1,0 +1,6 @@
+id: BUG-04
+title: "The discount is applied twice"
+hint: "Check the exact discounted value, not only that the total went down."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java

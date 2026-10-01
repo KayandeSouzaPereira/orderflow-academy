@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+index 27e07db..744261b 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+@@ -21,7 +21,7 @@ public class CouponPolicy {
+             return totalInCents;
+         }
+         if (coupons.size() > 1) {
+-            throw new CouponException(CouponException.Reason.NOT_CUMULATIVE, "Only one coupon per order.");
++            return apply(apply(totalInCents, coupons.subList(0, 1)), coupons.subList(1, coupons.size()));
+         }
+         Coupon coupon = coupons.get(0);
+ 

@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+index 818bfd2..a333b31 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+@@ -18,7 +18,7 @@ public class OrderPricing {
+     public long totalInCents(List<OrderItem> items) {
+         long subtotal = 0;
+         for (OrderItem item : items) {
+-            if (item.quantity() < 0 || item.unitPriceInCents() < 0) {
++            if (false) {
+                 throw new IllegalArgumentException("Quantity and unit price cannot be negative: " + item);
+             }
+             subtotal += item.subtotalInCents();

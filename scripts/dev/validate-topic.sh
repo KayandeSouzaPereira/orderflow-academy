@@ -41,7 +41,7 @@ done
 find_solution() {
   local name="$1" candidate
   for candidate in ${SOLUTIONS:+"${SOLUTIONS}/${TOPIC}/${name}"} "${ROOT}/tracks/${TOPIC}/${name}"; do
-    [[ -d "${candidate}/app" ]] && { (cd "$candidate" && pwd); return 0; }
+    [[ -d "$candidate" ]] && { (cd "$candidate" && pwd); return 0; }
   done
   return 1
 }

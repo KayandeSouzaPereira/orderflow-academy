@@ -1,0 +1,6 @@
+id: BUG-05
+title: "Cancelling an order does not give the stock back"
+hint: "After a cancellation, what should have happened to each item's stock?"
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java

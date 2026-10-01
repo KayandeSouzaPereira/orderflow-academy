@@ -1,0 +1,15 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
+index 98d74e8..2cbbc9f 100644
+--- a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
++++ b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
+@@ -83,10 +83,6 @@ public class DynamoOrderRepository implements OrderRepository {
+             dynamo.putItem(PutItemRequest.builder()
+                     .tableName(table)
+                     .item(toItem(updated))
+-                    .conditionExpression("#status = :expected")
+-                    // "status" is a DynamoDB reserved word.
+-                    .expressionAttributeNames(Map.of("#status", "status"))
+-                    .expressionAttributeValues(Map.of(":expected", s(expectedStatus.name())))
+                     .build());
+             return true;
+         } catch (ConditionalCheckFailedException e) {

@@ -1,0 +1,17 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+index 27e07db..7bf0515 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+@@ -26,10 +26,10 @@ public class CouponPolicy {
+         Coupon coupon = coupons.get(0);
+ 
+         LocalDate today = LocalDate.now(clock);
+-        if (today.isBefore(coupon.validFrom())) {
++        if (today == null) {
+             throw new CouponException(CouponException.Reason.NOT_YET_VALID, coupon.code() + " is not valid yet.");
+         }
+-        if (today.isAfter(coupon.validUntil())) {
++        if (today == null) {
+             throw new CouponException(CouponException.Reason.EXPIRED, coupon.code() + " has expired.");
+         }
+         if (totalInCents < coupon.minimumOrderInCents()) {

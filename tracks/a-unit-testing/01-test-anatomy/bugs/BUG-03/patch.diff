@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+index 818bfd2..03984b6 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+@@ -21,7 +21,7 @@ public class OrderPricing {
+             if (item.quantity() < 0 || item.unitPriceInCents() < 0) {
+                 throw new IllegalArgumentException("Quantity and unit price cannot be negative: " + item);
+             }
+-            subtotal += item.subtotalInCents();
++            subtotal += item.unitPriceInCents();
+         }
+         if (subtotal > DISCOUNT_THRESHOLD_IN_CENTS) {
+             // Integer division on non-negative values rounds down.

@@ -1,0 +1,6 @@
+id: BUG-02
+title: "An order equal to the coupon minimum is rejected"
+hint: "The minimum is inclusive: test an order of exactly that amount."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java

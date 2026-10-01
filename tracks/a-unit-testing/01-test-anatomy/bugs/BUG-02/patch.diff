@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+index 818bfd2..ac32ce8 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java
+@@ -25,7 +25,7 @@ public class OrderPricing {
+         }
+         if (subtotal > DISCOUNT_THRESHOLD_IN_CENTS) {
+             // Integer division on non-negative values rounds down.
+-            return subtotal * (100 - DISCOUNT_PERCENT) / 100;
++            return (subtotal * (100 - DISCOUNT_PERCENT) + 99) / 100;
+         }
+         return subtotal;
+     }

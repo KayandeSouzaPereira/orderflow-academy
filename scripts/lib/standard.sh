@@ -100,7 +100,9 @@ review_standard() {
 
   # Runtime practices need the original code, so they run before the bug bank.
   standard__evaluate_practices
+  standard__swap_in_reference "$topic_dir"
   standard__bug_bank "$topic_dir"
+  standard__swap_back
   standard__mutation
 
   standard__report
@@ -121,16 +123,16 @@ standard__prechecks() {
 
 # --- Practices ---------------------------------------------------------------
 
-# Rules as TSV lines: rule, weight, required.
+# Rules as TSV lines: rule, weight, required, the rule's JSON (parameters).
 standard__practice_rules() {
   jq -r '(.practices // [])[]
-    | if type == "string" then {rule: ., weight: 1, required: false} else . end
-    | [.rule, (.weight // 1), (.required // false)] | @tsv' <<<"$TOPIC_JSON"
+    | if type == "string" then {rule: .} else . end
+    | [.rule, (.weight // 1), (.required // false), tojson] | @tsv' <<<"$TOPIC_JSON"
 }
 
 standard__required_practices() {
   local rule weight required
-  while IFS=$'\t' read -r rule weight required; do
+  while IFS=$'\t' read -r rule weight required PRACTICE_RULE_JSON; do
     [[ -n "$rule" ]] || continue
     # black-box-only is always a prerequisite.
     [[ "$required" == "true" || "$rule" == "black-box-only" ]] || continue
@@ -179,10 +181,12 @@ STANDARD_PRACTICES_WEIGHT_TOTAL=0
 
 standard__evaluate_practices() {
   local rule weight required
-  while IFS=$'\t' read -r rule weight required; do
+  while IFS=$'\t' read -r rule weight required PRACTICE_RULE_JSON; do
     [[ -n "$rule" ]] || continue
     [[ "$required" == "true" || "$rule" == "black-box-only" ]] && continue
     practice_known "$rule" || score_fatal "unknown practice rule '${rule}' in topic.yml" "See scripts/lib/practices.sh."
+    # An overlay (reference/calibration solution) has no Git history to judge.
+    [[ -n "$STANDARD_OVERLAY" ]] && practice_is_history_rule "$rule" && continue
     STANDARD_PRACTICES_TOTAL=$(( STANDARD_PRACTICES_TOTAL + 1 ))
     STANDARD_PRACTICES_WEIGHT_TOTAL=$(( STANDARD_PRACTICES_WEIGHT_TOTAL + weight ))
     if practice_run "$rule"; then
@@ -192,6 +196,43 @@ standard__evaluate_practices() {
       score_hint "$rule" "$(practice_hint "$rule")" "${PRACTICE_DETAIL:-$(practice_title "$rule")}"
     fi
   done < <(standard__practice_rules)
+}
+
+# --- Implementation swap (TDD kata) ------------------------------------------
+#
+# topic.yml: implementation_swap: { path: <repo-relative file>, reference: <file in the topic dir> }
+# The participant writes the implementation. Bugs are planted in a reference
+# implementation instead, so the participant's tests must also pass on it.
+
+STANDARD_SWAP_TARGET=""
+
+standard__swap_in_reference() {
+  local topic_dir="$1" path reference
+  path="$(topic '.implementation_swap.path')"
+  [[ -n "$path" ]] || return 0
+  reference="${topic_dir}/$(topic '.implementation_swap.reference')"
+  [[ -f "$reference" ]] || score_fatal "reference implementation ${reference} not found" \
+    "Check implementation_swap in topic.yml."
+
+  STANDARD_SWAP_TARGET="${REVIEW_WORKSPACE}/${path}"
+  cp "$STANDARD_SWAP_TARGET" "${REVIEW_WORKSPACE}/.participant-implementation"
+  cp "$reference" "$STANDARD_SWAP_TARGET"
+
+  score_progress "running your tests against the reference implementation"
+  local status=0
+  runner_run || status=$?
+  if (( status == 0 )); then
+    score_gate true "tests also pass on the reference ${path##*/}"
+    return 0
+  fi
+  score_hint "reference" "Bugs are planted in a reference implementation that follows the README spec. Tests that fail on it check behaviour the spec does not ask for:
+$(runner_failure_summary)"
+  score_gate false "tests fail on the reference ${path##*/}"
+}
+
+standard__swap_back() {
+  [[ -n "$STANDARD_SWAP_TARGET" ]] || return 0
+  cp "${REVIEW_WORKSPACE}/.participant-implementation" "$STANDARD_SWAP_TARGET"
 }
 
 # --- Bug bank ----------------------------------------------------------------

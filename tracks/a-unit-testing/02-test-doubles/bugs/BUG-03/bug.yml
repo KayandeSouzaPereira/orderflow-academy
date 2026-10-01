@@ -1,0 +1,6 @@
+id: BUG-03
+title: "OrderCreated is published even when saving the order fails"
+hint: "Make the order repository fail and check what was published."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
