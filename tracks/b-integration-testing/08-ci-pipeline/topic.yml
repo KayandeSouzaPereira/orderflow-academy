@@ -1,0 +1,5 @@
+id: b08
+title: CI pipeline for the API tests
+track: b-integration-testing
+kind: custom
+pass_threshold: 70
