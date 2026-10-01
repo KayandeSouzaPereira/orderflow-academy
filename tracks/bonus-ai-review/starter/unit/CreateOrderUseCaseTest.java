@@ -1,0 +1,84 @@
+package dev.orderflow.tracks.bonus;
+
+import dev.orderflow.application.CreateOrderUseCase;
+import dev.orderflow.application.CreateOrderUseCase.Command;
+import dev.orderflow.application.port.EventPublisher;
+import dev.orderflow.application.port.OrderRepository;
+import dev.orderflow.application.port.ProductRepository;
+import dev.orderflow.domain.DomainException;
+import dev.orderflow.domain.Order;
+import dev.orderflow.domain.OrderCreated;
+import dev.orderflow.domain.OrderPricing;
+import dev.orderflow.domain.OrderStatus;
+import dev.orderflow.domain.OrderValidator;
+import dev.orderflow.domain.OrderValidator.RequestedItem;
+import dev.orderflow.domain.Product;
+import dev.orderflow.support.TestData;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/** Unit tests for CreateOrderUseCase, generated with an AI assistant. */
+class CreateOrderUseCaseTest {
+
+    private ProductRepository productRepository;
+    private OrderRepository orderRepository;
+    private EventPublisher eventPublisher;
+    private CreateOrderUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        productRepository = mock(ProductRepository.class);
+        orderRepository = mock(OrderRepository.class);
+        eventPublisher = mock(EventPublisher.class);
+        useCase = new CreateOrderUseCase(productRepository, orderRepository, eventPublisher,
+                new OrderValidator(), new OrderPricing(), () -> "order-1", TestData.fixedClock());
+    }
+
+    private Product givenProduct(String id, long priceInCents) {
+        Product product = TestData.aProduct().withId(id).withPriceInCents(priceInCents).build();
+        when(productRepository.findById(id)).thenReturn(Optional.of(product));
+        when(productRepository.reserveStock(id, 2)).thenReturn(true);
+        return product;
+    }
+
+    @Test
+    void shouldCreateOrderWhenRequestIsValid() {
+        givenProduct("p-1", 1_000);
+        Command command = new Command("ana@example.com", List.of(new RequestedItem("p-1", 2)));
+
+        Order order = useCase.execute(command);
+
+        assertNotNull(order);
+        assertEquals(OrderStatus.PENDING, order.status());
+        verify(orderRepository).save(any(Order.class));
+    }
+
+    @Test
+    void shouldPublishEventWhenOrderIsSaved() {
+        givenProduct("p-1", 1_000);
+        Command command = new Command("ana@example.com", List.of(new RequestedItem("p-1", 2)));
+
+        useCase.execute(command);
+
+        verify(eventPublisher).publish(any(OrderCreated.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenProductIsNotFound() {
+        when(productRepository.findById("missing")).thenReturn(Optional.empty());
+        Command command = new Command("ana@example.com", List.of(new RequestedItem("missing", 1)));
+
+        assertThrows(DomainException.class, () -> useCase.execute(command));
+    }
+}

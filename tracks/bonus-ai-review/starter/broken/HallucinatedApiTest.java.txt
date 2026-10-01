@@ -1,0 +1,59 @@
+package dev.orderflow.apitests.tracks.bonus;
+
+// This file is outside the build on purpose (.txt): it uses methods that do
+// not exist. Fix it, rename it to HallucinatedApiTest.java and move it to
+// app/api-tests/src/test/java/dev/orderflow/apitests/tracks/bonus/.
+
+import dev.orderflow.apitests.support.TestApi;
+import io.restassured.RestAssured;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
+/** Order cancellation tests, generated with an AI assistant. */
+class HallucinatedApiTest {
+
+    private String createOrder() {
+        String productId = TestApi.createProduct("Bonus " + UUID.randomUUID(), 1_000, 5)
+                .then().expectStatus().isCreated().extractId();
+        return RestAssured.givenJson(TestApi.spec())
+                .withBody(Map.of("customerEmail", "bonus-" + UUID.randomUUID() + "@example.com",
+                        "items", List.of(Map.of("productId", productId, "quantity", 1))))
+                .postAndExpectCreated("/api/orders")
+                .jsonField("id");
+    }
+
+    @Test
+    void shouldCancelOrderWhenItIsPending() {
+        String orderId = createOrder();
+
+        var response = TestApi.spec().post("/api/orders/{id}/cancel", orderId);
+
+        assertThat(response).hasStatusCode(200).hasJsonField("status", "CANCELLED");
+    }
+
+    @Test
+    void shouldRejectCancellationWhenOrderIsAlreadyCancelled() {
+        String orderId = createOrder();
+        TestApi.spec().post("/api/orders/{id}/cancel", orderId);
+
+        var second = TestApi.spec().post("/api/orders/{id}/cancel", orderId);
+
+        assertThat(second.statusCode()).isEqualTo(409);
+        assertThat(second.jsonBody().get("code")).isEqualToIgnoringCase("INVALID_ORDER_TRANSITION");
+    }
+
+    @Test
+    void shouldConfirmOrderWhenProcessorRuns() {
+        String orderId = createOrder();
+
+        await().untilStatusIs("CONFIRMED").atMostSeconds(30).forOrder(orderId);
+
+        assertThat(TestApi.spec().get("/api/orders/{id}", orderId)).bodyContains("CONFIRMED");
+    }
+}
