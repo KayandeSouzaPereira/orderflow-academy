@@ -1,0 +1,26 @@
+diff --git a/app/frontend/src/app/cart/cart-page.html b/app/frontend/src/app/cart/cart-page.html
+index 0c65cf6..78fa173 100644
+--- a/app/frontend/src/app/cart/cart-page.html
++++ b/app/frontend/src/app/cart/cart-page.html
+@@ -58,7 +58,7 @@
+       }
+     </p>
+ 
+-    <button type="submit" [disabled]="!canSubmit()">Place order</button>
++    <button type="submit" [disabled]="cart.isEmpty() || email.invalid">Place order</button>
+     @if (submitting()) {
+       <p role="status" class="loading">Placing order…</p>
+     }
+diff --git a/app/frontend/src/app/cart/cart-page.ts b/app/frontend/src/app/cart/cart-page.ts
+index e14cb98..c2d2b99 100644
+--- a/app/frontend/src/app/cart/cart-page.ts
++++ b/app/frontend/src/app/cart/cart-page.ts
+@@ -39,7 +39,7 @@ export class CartPage {
+ 
+   protected placeOrder(): void {
+     this.email.markAsTouched();
+-    if (!this.canSubmit()) {
++    if (this.cart.isEmpty() || this.email.invalid) {
+       return;
+     }
+     this.submitting.set(true);

@@ -1,0 +1,6 @@
+id: BUG-04
+title: "The confirmation message does not show the order id"
+hint: "Read the confirmation the customer gets right after placing the order."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.html

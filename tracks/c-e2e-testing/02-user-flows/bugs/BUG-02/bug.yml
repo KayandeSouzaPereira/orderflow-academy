@@ -1,0 +1,6 @@
+id: BUG-02
+title: "The Place order button never becomes enabled"
+hint: "Follow the flow until the order is really placed."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart-page.ts

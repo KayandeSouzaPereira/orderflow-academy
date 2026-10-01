@@ -79,9 +79,10 @@ review_standard() {
   [[ -n "$STANDARD_OVERLAY" ]] && review_workspace_overlay "$STANDARD_OVERLAY"
 
   local -a specs=()
-  mapfile -t specs < <(topic '(.test_files // [])[]')
+  mapfile -t specs < <(topic '(.test_files // ([.test_dir] | map(select(. != null))))[]')
   runner_init "$kind" "$(topic '.test_package')" "${specs[@]}"
   [[ "$kind" == "frontend" ]] && runner_frontend_dependencies
+  [[ "$kind" == "e2e" ]] && runner_e2e_dependencies
   RUNNER_TIMEOUT="$(topic '.timeouts.test_run_seconds')"
   RUNNER_TIMEOUT="${RUNNER_TIMEOUT:-300}"
   mapfile -t PRACTICE_FILES < <(runner_test_files)
@@ -116,7 +117,7 @@ standard__prechecks() {
   local kind="$1"
   case "$kind" in
     backend | api) review_require_java ;;
-    frontend) review_require_tools node ;;
+    frontend | e2e) review_require_tools node ;;
     *) score_fatal "topic kind '${kind}' cannot use the standard review" \
          "Use kind backend, api or frontend, or write a custom review.sh with the score.sh API." ;;
   esac
@@ -151,7 +152,7 @@ standard__required_practices() {
 standard__require_test_files() {
   (( ${#PRACTICE_FILES[@]} > 0 )) && return 0
   local where
-  where="$(topic '.test_package // (.test_files // [] | join(", "))')"
+  where="$(topic '.test_package // .test_dir // (.test_files // [] | join(", "))')"
   score_hint "no-tests" "Write your tests in ${where} (see the topic README)."
   score_gate false "no test files in ${where}"
 }

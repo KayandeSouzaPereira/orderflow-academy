@@ -1,0 +1,12 @@
+diff --git a/app/frontend/src/app/cart/cart-page.ts b/app/frontend/src/app/cart/cart-page.ts
+index e14cb98..8d580f5 100644
+--- a/app/frontend/src/app/cart/cart-page.ts
++++ b/app/frontend/src/app/cart/cart-page.ts
+@@ -80,6 +80,6 @@ export function describeOrderError(error: unknown): string {
+     case 0:
+       return 'Could not reach the server. Check your connection and try again.';
+     default:
+-      return 'Something went wrong while creating the order. Please try again.';
++      return '';
+   }
+ }

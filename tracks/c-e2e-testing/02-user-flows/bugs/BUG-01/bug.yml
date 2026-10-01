@@ -1,0 +1,6 @@
+id: BUG-01
+title: "Changing a quantity in the cart has no effect"
+hint: "Change a quantity and check the subtotal and the header count."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart.service.ts

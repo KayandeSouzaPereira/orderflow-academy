@@ -1,0 +1,7 @@
+id: BUG-03
+title: "A double click creates two orders"
+hint: "Slow the API down with page.route and click twice; count the requests."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart-page.html
+  - app/frontend/src/app/cart/cart-page.ts

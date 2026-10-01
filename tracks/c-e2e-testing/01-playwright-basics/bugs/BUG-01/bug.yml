@@ -1,0 +1,6 @@
+id: BUG-01
+title: "Prices are not shown in the catalog"
+hint: "Check what a customer needs to see on each product card, not only its name."
+side: frontend
+files:
+  - app/frontend/src/app/catalog/catalog-page.html

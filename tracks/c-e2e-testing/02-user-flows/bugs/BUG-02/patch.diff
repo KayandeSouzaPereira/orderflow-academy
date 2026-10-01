@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/cart/cart-page.ts b/app/frontend/src/app/cart/cart-page.ts
+index e14cb98..3d8d347 100644
+--- a/app/frontend/src/app/cart/cart-page.ts
++++ b/app/frontend/src/app/cart/cart-page.ts
+@@ -34,7 +34,7 @@ export class CartPage {
+   }
+ 
+   protected canSubmit(): boolean {
+-    return !this.submitting() && !this.cart.isEmpty() && this.email.valid;
++    return !this.submitting() && !this.cart.isEmpty() && this.email.valid && this.email.value === '';
+   }
+ 
+   protected placeOrder(): void {

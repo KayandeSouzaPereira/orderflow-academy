@@ -42,6 +42,11 @@ runner_init() {
       (( ${#RUNNER_FRONTEND_SPECS[@]} > 0 )) || score_fatal "topic.yml has no test_files" \
         "List the spec files, e.g. test_files: [src/app/cart/cart.service.spec.ts]."
       return 0 ;;
+    e2e)
+      RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/e2e"
+      [[ -n "${1:-}" ]] || score_fatal "topic.yml has no test_dir" "Set test_dir, e.g. tests/tracks/c01."
+      RUNNER_TEST_DIR="${RUNNER_MODULE_DIR}/$1"
+      return 0 ;;
     *) score_fatal "kind '${RUNNER_KIND}' has no test runner yet" \
          "Supported kinds: backend, api, frontend. Use kind: custom and score the topic in its review.sh." ;;
   esac
@@ -60,6 +65,10 @@ runner_test_files() {
     return 0
   fi
   [[ -d "$RUNNER_TEST_DIR" ]] || return 0
+  if [[ "$RUNNER_KIND" == "e2e" ]]; then
+    find "$RUNNER_TEST_DIR" -type f -name '*.ts' | sort
+    return 0
+  fi
   find "$RUNNER_TEST_DIR" -type f -name '*.java' | sort
 }
 
@@ -68,11 +77,61 @@ runner_run() {
   RUNNER_LOG="${REVIEW_WORKSPACE}/run-${RUNNER_RUN_COUNT}.log"
   RUNNER_TESTS=0
   RUNNER_FAILED=0
-  if [[ "$RUNNER_KIND" == "frontend" ]]; then
-    runner__angular "$@"
-  else
-    runner__maven "$@"
+  case "$RUNNER_KIND" in
+    frontend) runner__angular "$@" ;;
+    e2e) runner__playwright "$@" ;;
+    *) runner__maven "$@" ;;
+  esac
+}
+
+# --- Playwright (e2e) --------------------------------------------------------
+
+# node_modules (hard links or npm ci) and the Chromium browser.
+runner_e2e_dependencies() {
+  local source="${SCORE_REPO_ROOT}/app/e2e/node_modules" target="${RUNNER_MODULE_DIR}/node_modules"
+  if [[ ! -d "$target" ]]; then
+    if [[ -d "$source" ]] && cp -al "$source" "$target" 2>/dev/null; then
+      score_progress "linking e2e dependencies"
+    else
+      rm -rf "$target"
+      score_progress "installing e2e dependencies (npm ci)"
+      (cd "$RUNNER_MODULE_DIR" && npm ci --no-audit --no-fund >"${REVIEW_WORKSPACE}/npm-ci-e2e.log" 2>&1) \
+        || score_fatal "npm ci failed in app/e2e" "Run 'npm ci' in app/e2e yourself and check the error."
+    fi
   fi
+  score_progress "making sure Chromium is installed for Playwright"
+  runner__playwright_cli install chromium >"${REVIEW_WORKSPACE}/playwright-install.log" 2>&1 \
+    || score_fatal "Playwright could not install Chromium" "Run 'npx playwright install chromium' in app/e2e."
+}
+
+runner__playwright_cli() {
+  (cd "$RUNNER_MODULE_DIR" && node node_modules/@playwright/test/cli.js "$@")
+}
+
+runner__playwright() {
+  local report="${REVIEW_WORKSPACE}/playwright-${RUNNER_RUN_COUNT}.json" status=0
+  local relative="${RUNNER_TEST_DIR#"${RUNNER_MODULE_DIR}/"}"
+  rm -f "$report"
+  # Reviews never retry: a test must pass the first time.
+  PLAYWRIGHT_JSON_OUTPUT_NAME="$report" run_with_timeout "$RUNNER_TIMEOUT" runner__playwright_cli test "$relative" \
+    --reporter=json --retries=0 "$@" >"$RUNNER_LOG" 2>&1 || status=$?
+
+  if [[ -f "$report" ]]; then
+    RUNNER_TESTS="$(jq -r '.stats | (.expected // 0) + (.unexpected // 0) + (.flaky // 0)' "$report")"
+    RUNNER_FAILED="$(jq -r '.stats | (.unexpected // 0) + (.flaky // 0)' "$report")"
+    # A TypeScript or import error is reported as a global error, with no test run.
+    if (( RUNNER_TESTS == 0 )) && [[ "$(jq -r '(.errors // []) | length' "$report")" != "0" ]]; then
+      cat "$report" >>"$RUNNER_LOG"
+      return 3
+    fi
+  fi
+  if (( status == 124 )); then
+    return 124
+  fi
+  if (( status != 0 || RUNNER_FAILED > 0 )); then
+    return 1
+  fi
+  return 0
 }
 
 # --- Maven (backend, api) ----------------------------------------------------
@@ -183,6 +242,12 @@ runner__angular() {
 # failing tests), for the participant.
 runner_failure_summary() {
   [[ -f "$RUNNER_LOG" ]] || return 0
+  if [[ "$RUNNER_KIND" == "e2e" ]]; then
+    jq -r '[.. | objects | select(has("message")) | .message] | .[:4][] | split("\n")[0]' \
+      "${REVIEW_WORKSPACE}/playwright-${RUNNER_RUN_COUNT}.json" 2>/dev/null \
+      | sed $'s/\x1b\\[[0-9;]*m//g' | head -n 8 | sed 's/^/          /'
+    return 0
+  fi
   if [[ "$RUNNER_KIND" == "frontend" ]]; then
     sed $'s/\x1b\\[[0-9;]*m//g' "$RUNNER_LOG" \
       | grep -E 'FAIL|×|Error:|error TS|ERROR' \

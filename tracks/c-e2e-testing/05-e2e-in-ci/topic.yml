@@ -1,0 +1,5 @@
+id: c05
+title: End-to-end tests in CI
+track: c-e2e-testing
+kind: custom
+pass_threshold: 70

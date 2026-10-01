@@ -20,7 +20,7 @@ PRACTICE_RULE_JSON='{}'
 # (reference or calibration solutions have no history of their own).
 PRACTICE_HISTORY_RULES=" tdd-history "
 # EREs below avoid backslashes ([(] instead of \(): awk -v would eat them.
-PRACTICE_ASSERTIONS='assertThat|assert[A-Z][A-Za-z]*[[:space:]]*[(]|verify[A-Za-z]*[[:space:]]*[(]|[.]statusCode[[:space:]]*[(]|[.]body[[:space:]]*[(]|expect[[:space:]]*[(]'
+PRACTICE_ASSERTIONS='assertThat|assert[A-Z][A-Za-z]*[[:space:]]*[(]|verify[A-Za-z]*[[:space:]]*[(]|[.]statusCode[[:space:]]*[(]|[.]body[[:space:]]*[(]|expect[[:space:]]*[(]|expect[.](poll|soft)[[:space:]]*[(]'
 PRACTICE_SEEDS=(20261001 4242)
 
 practice_title() {
@@ -37,6 +37,13 @@ practice_title() {
     starter-fixed) echo "The starter tests were fixed" ;;
     tdd-history) echo "Tests come before or with the code (Git history)" ;;
     traceability) echo "Every manual case has an automated test" ;;
+    no-wait-for-timeout) echo "No fixed waits (waitForTimeout)" ;;
+    no-test-only) echo "No test.only, test.skip or test.fixme" ;;
+    accessible-locators) echo "Locators by role, label or text" ;;
+    no-hardcoded-base-url) echo "Navigation relative to baseURL" ;;
+    page-objects) echo "Specs use page objects" ;;
+    api-data-setup) echo "Test data prepared through the API" ;;
+    stable-without-retries) echo "Passes twice more without retries" ;;
     *) echo "$1" ;;
   esac
 }
@@ -55,6 +62,13 @@ practice_hint() {
     starter-fixed) echo "Copy the starter test into your package and fix all three problems: missing assertion, two behaviours in one test, generic name." ;;
     tdd-history) echo "Commit a failing test first (or together with the code), then the code that makes it pass. Small commits make this visible." ;;
     traceability) echo "Give every manual case a heading with its id (## MC-01 ...) and tag at least one test with @Tag(\"MC-01\")." ;;
+    no-wait-for-timeout) echo "Wait for what you expect to see: await expect(locator).toHaveText(...) or expect.poll(...) retry until it holds." ;;
+    no-test-only) echo "Remove .only/.skip/.fixme before you push: they hide tests from the run." ;;
+    accessible-locators) echo "Use page.getByRole/getByLabel/getByText; CSS or XPath only for [data-testid] when nothing accessible exists." ;;
+    no-hardcoded-base-url) echo "Navigate with relative paths (page.goto('/cart')) and read the API URL from support/environment.ts." ;;
+    page-objects) echo "Move page.getBy*/page.locator calls into page objects; specs should read like a user story." ;;
+    api-data-setup) echo "Create products and orders in a fixture with request.post(...) to the API, not through the UI." ;;
+    stable-without-retries) echo "A test passed once and failed later: wait on assertions, use your own data, avoid timing assumptions." ;;
     *) echo "See the topic README." ;;
   esac
 }
@@ -333,6 +347,83 @@ practice_traceability() {
   PRACTICE_DETAIL="$(printf '%s; ' "${problems[@]}")"
   PRACTICE_DETAIL="${PRACTICE_DETAIL%; }"
   return 1
+}
+
+# --- Track C (Playwright) ----------------------------------------------------
+
+practice_no_wait_for_timeout() {
+  local hits
+  hits="$(practice__grep 'waitForTimeout[[:space:]]*[(]')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+practice_no_test_only() {
+  local hits
+  hits="$(practice__grep '(test|describe)[.](only|skip|fixme)[[:space:]]*[(]')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# CSS or XPath selectors are only allowed for data-testid.
+practice_accessible_locators() {
+  local hits
+  hits="$(practice__grep '[.]locator[[:space:]]*[(][[:space:]]*[^)[:space:]]' \
+    | while IFS=: read -r name line; do
+        local file
+        for file in "${PRACTICE_FILES[@]}"; do
+          [[ "${file##*/}" == "$name" ]] || continue
+          sed -n "${line}p" "$file" | grep -qE 'locator[[:space:]]*[(][[:space:]]*.[[]data-testid' || echo "${name}:${line}"
+        done
+      done)"
+  # page.$(...) / page.$$(...) / $eval: raw CSS selectors. [$] avoids backslashes (awk -v eats them).
+  hits+="$(practice__grep '[.][$][$]?(eval)?[[:space:]]*[(]|xpath=|[(][[:space:]]*.//')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+practice_no_hardcoded_base_url() {
+  local hits
+  hits="$(practice__grep 'https?://(localhost|127[.]0[.]0[.]1)|:4200([^0-9]|$)|:8080([^0-9]|$)')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# Spec files talk to page objects; only page objects touch page.getBy*/locator.
+practice_page_objects() {
+  local file hits=""
+  for file in "${PRACTICE_FILES[@]}"; do
+    [[ "$file" == *.spec.ts ]] || continue
+    hits+="$(awk -v name="${file##*/}" '
+      /^[[:space:]]*(\/\/|\*|\/\*)/ { next }
+      /page[.](getBy[A-Za-z]+|locator)[[:space:]]*[(]/ { printf "%s:%d\n", name, NR }' "$file")"
+  done
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# Test data is prepared through the API (Playwright's request fixture).
+practice_api_data_setup() {
+  [[ -n "$(practice__grep 'request[.]post[[:space:]]*[(]')" ]] && return 0
+  PRACTICE_DETAIL="no request.post(...) in the topic folder"
+  return 1
+}
+
+practice_stable_without_retries() {
+  local attempt
+  for attempt in 1 2; do
+    score_progress "running the suite again without retries (${attempt}/2)"
+    if ! runner_run; then
+      PRACTICE_DETAIL="failed on extra run ${attempt} without retries"
+      return 1
+    fi
+  done
+  return 0
 }
 
 # --- Runtime rules -----------------------------------------------------------

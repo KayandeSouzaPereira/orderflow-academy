@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/cart/cart-page.ts b/app/frontend/src/app/cart/cart-page.ts
+index e14cb98..507b094 100644
+--- a/app/frontend/src/app/cart/cart-page.ts
++++ b/app/frontend/src/app/cart/cart-page.ts
+@@ -73,7 +73,7 @@ export function describeOrderError(error: unknown): string {
+   const apiError = apiErrorOf(error);
+   switch (statusOf(error)) {
+     case 409:
+-      return apiError?.message ?? 'Some products are out of stock.';
++      return '';
+     case 400:
+     case 404:
+       return apiError?.message ?? 'The order could not be created. Please review the cart.';

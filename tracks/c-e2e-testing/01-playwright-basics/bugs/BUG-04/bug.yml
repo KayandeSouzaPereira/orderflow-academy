@@ -1,0 +1,6 @@
+id: BUG-04
+title: "The catalog page has the wrong title"
+hint: "The browser tab title is part of the page too."
+side: frontend
+files:
+  - app/frontend/src/app/app.routes.ts

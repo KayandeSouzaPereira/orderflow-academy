@@ -1,0 +1,15 @@
+diff --git a/app/frontend/src/app/cart/cart.service.ts b/app/frontend/src/app/cart/cart.service.ts
+index 20ef6ea..887a3ec 100644
+--- a/app/frontend/src/app/cart/cart.service.ts
++++ b/app/frontend/src/app/cart/cart.service.ts
+@@ -47,9 +47,7 @@ export class CartService {
+ 
+   setQuantity(productId: string, quantity: number): void {
+     const clamped = Math.min(MAX_QUANTITY, Math.max(MIN_QUANTITY, Math.trunc(quantity) || MIN_QUANTITY));
+-    this.lines.update((lines) =>
+-      lines.map((line) => (line.product.id === productId ? { ...line, quantity: clamped } : line)),
+-    );
++    void clamped;
+   }
+ 
+   /** Removes the line of one product; other lines stay untouched. */

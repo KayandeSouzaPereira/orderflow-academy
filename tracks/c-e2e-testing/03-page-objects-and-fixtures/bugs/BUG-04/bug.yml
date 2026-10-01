@@ -1,0 +1,6 @@
+id: BUG-04
+title: "Cancelling an order does not change what the page shows"
+hint: "After cancelling, check what the page says, without reloading it."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.ts

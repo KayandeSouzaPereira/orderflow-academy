@@ -1,0 +1,15 @@
+diff --git a/app/frontend/src/app/orders/order-status.component.ts b/app/frontend/src/app/orders/order-status.component.ts
+index cb9e8b6..41f09c5 100644
+--- a/app/frontend/src/app/orders/order-status.component.ts
++++ b/app/frontend/src/app/orders/order-status.component.ts
+@@ -114,10 +114,6 @@ export class OrderStatusComponent {
+   }
+ 
+   private show(order: Order): void {
+-    if (!isOrder(order)) {
+-      this.loadError.set('The server sent an unexpected response.');
+-      return;
+-    }
+     this.loadError.set(null);
+     this.order.set(order);
+     if (order.status === 'CONFIRMED' && !this.invoiceUrl()) {

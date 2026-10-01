@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/orders/order-status.component.ts b/app/frontend/src/app/orders/order-status.component.ts
+index cb9e8b6..c3844c0 100644
+--- a/app/frontend/src/app/orders/order-status.component.ts
++++ b/app/frontend/src/app/orders/order-status.component.ts
+@@ -86,7 +86,7 @@ export class OrderStatusComponent {
+     this.polling = timer(0, this.pollIntervalMs)
+       .pipe(
+         switchMap(() => this.api.getOrder(this.id())),
+-        takeWhile((order) => isOrder(order) && order.status === 'PENDING', true),
++        takeWhile(() => false, true),
+       )
+       .subscribe({
+         next: (order) => this.show(order),

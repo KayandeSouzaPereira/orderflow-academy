@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/orders/order-status.component.html b/app/frontend/src/app/orders/order-status.component.html
+index 64912b7..9fbc91e 100644
+--- a/app/frontend/src/app/orders/order-status.component.html
++++ b/app/frontend/src/app/orders/order-status.component.html
+@@ -3,7 +3,7 @@
+   <p role="alert" class="error">No order with ID {{ id() }}.</p>
+ } @else if (order(); as order) {
+   @if (justCreated()) {
+-    <p role="status" class="success">Order created! Your order ID is <code>{{ order.id }}</code>.</p>
++    <p role="status" class="success">Order created!</p>
+   }
+ 
+   <h1>Order details</h1>

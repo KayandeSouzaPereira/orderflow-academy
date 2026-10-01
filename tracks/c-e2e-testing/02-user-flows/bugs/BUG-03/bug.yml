@@ -1,0 +1,6 @@
+id: BUG-03
+title: "The order status never updates on screen"
+hint: "Wait on the order page until the status changes by itself."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.ts

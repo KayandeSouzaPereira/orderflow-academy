@@ -63,8 +63,8 @@ validate_topic_yml() {
   kind="$(jq -r '.kind // empty' <<<"$json")"
   [[ "$KINDS" == *" ${kind} "* ]] || error "$topic" "topic.yml kind '${kind}' is not one of:${KINDS}"
   if [[ "$kind" != "custom" ]]; then
-    [[ -n "$(jq -r '.test_package // .test_files // empty' <<<"$json")" ]] \
-      || error "$topic" "topic.yml needs test_package (or test_files)"
+    [[ -n "$(jq -r '.test_package // .test_files // .test_dir // empty' <<<"$json")" ]] \
+      || error "$topic" "topic.yml needs test_package, test_files or test_dir"
   fi
   while IFS= read -r rule; do
     [[ -z "$rule" ]] && continue

@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/catalog/catalog-page.html b/app/frontend/src/app/catalog/catalog-page.html
+index 1e738c3..7f1ad73 100644
+--- a/app/frontend/src/app/catalog/catalog-page.html
++++ b/app/frontend/src/app/catalog/catalog-page.html
+@@ -21,7 +21,7 @@
+           <h2 [id]="'product-' + product.id">{{ product.name }}</h2>
+           <p class="description">{{ product.description }}</p>
+           <p class="price">{{ product.priceInCents | money }}</p>
+-          @if (product.stock > 0) {
++          @if (product.stock >= 0) {
+             <p class="stock in-stock">In stock ({{ product.stock }})</p>
+           } @else {
+             <p class="stock out-of-stock">Out of stock</p>

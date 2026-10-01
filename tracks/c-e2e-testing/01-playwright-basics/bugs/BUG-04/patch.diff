@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/app.routes.ts b/app/frontend/src/app/app.routes.ts
+index 198b99c..97427aa 100644
+--- a/app/frontend/src/app/app.routes.ts
++++ b/app/frontend/src/app/app.routes.ts
+@@ -5,7 +5,7 @@ import { OrderLookupPage } from './orders/order-lookup-page';
+ import { OrderStatusComponent } from './orders/order-status.component';
+ 
+ export const routes: Routes = [
+-  { path: '', component: CatalogPage, title: 'Catalog | OrderFlow' },
++  { path: '', component: CatalogPage, title: 'Frontend' },
+   { path: 'cart', component: CartPage, title: 'Cart | OrderFlow' },
+   { path: 'orders', component: OrderLookupPage, title: 'Track order | OrderFlow' },
+   { path: 'orders/:id', component: OrderStatusComponent, title: 'Order | OrderFlow' },
