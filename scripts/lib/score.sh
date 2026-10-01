@@ -27,6 +27,15 @@ readonly SCORE_EXIT_FAILED=1
 readonly SCORE_EXIT_GATE=2
 readonly SCORE_EXIT_ENV=3
 
+# Native jq.exe/yq.exe on Windows (Git Bash, MSYS2, Cygwin) end lines with
+# CRLF; strip the CR so values compare equal to plain strings.
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*)
+    jq() { command jq "$@" | tr -d '\r'; }
+    yq() { command yq "$@" | tr -d '\r'; }
+    ;;
+esac
+
 SCORE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCORE_REPO_ROOT="$(cd "${SCORE_LIB_DIR}/../.." && pwd)"
 

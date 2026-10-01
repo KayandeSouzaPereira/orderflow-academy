@@ -28,6 +28,20 @@ Requirements: Bash 4+ (Bash 5 recommended), `git`, `tar`, `jq`, [`yq` v4
 Docker for topics that need Floci or the full stack. XML reports (Surefire,
 PIT) are read with `yq -p xml`, so `xmllint` is not needed.
 
+## Maintainer checks (also run by `main-ci.yml`)
+
+```bash
+./scripts/dev/validate-structure.sh       # every topic and bug well formed, every patch applies
+./scripts/dev/validate-topic.sh <topic> --solutions ../orderflow-academy-private/solutions
+```
+
+`validate-topic.sh` checks the definition of done of a topic's bug bank:
+without tests the review stops at the gate (exit 2); the `reference` solution
+catches 100% of the bugs, scores at least 90 and raises no warning; the
+`calibration-weak` solution (if any) scores below the threshold. Solutions are
+read from the private repository (`solutions/<track>/<topic>/`) and, for the
+public example only, from `tracks/_example/`.
+
 ## How a review works
 
 1. **Pre-checks**: tools, Java, Docker. Failure: exit 3.
