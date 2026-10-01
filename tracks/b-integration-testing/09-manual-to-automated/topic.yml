@@ -8,6 +8,8 @@ pass_threshold: 70
 weights: { bugs: 70, practices: 30 }
 # No bugs of its own: the bank is the union of B-03 to B-07 (20 bugs).
 bug_bank: { min: 0, max: 0 }
+# Three stacks check the 20 bugs in parallel (about 7 bugs each).
+parallel_stacks: 3
 bug_sources:
   - b-integration-testing/03-api-test-setup
   - b-integration-testing/04-api-testing

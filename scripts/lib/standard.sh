@@ -271,43 +271,161 @@ standard__bug_id() {
   fi
 }
 
+# Runs the topic's tests against one bug variant in the current workspace and
+# prints the outcome: detected, missed, no-apply, no-build or no-compile.
+standard__run_bug() {
+  local bug_dir="$1" side status=0
+  side="$(bugbank_field "$bug_dir" side)"
+  if ! bugbank_apply "$bug_dir"; then
+    echo "no-apply"
+    return 0
+  fi
+  if [[ "$(topic '.requires_stack')" == "true" ]] && ! stack_rebuild "${side:-backend}"; then
+    bugbank_restore
+    echo "no-build"
+    return 0
+  fi
+  runner_run || status=$?
+  bugbank_restore
+  case "$status" in
+    0) echo "missed" ;;
+    1 | 124) echo "detected" ;;
+    *) echo "no-compile" ;;
+  esac
+}
+
+# Turns one outcome into score, hints and warnings.
+standard__record_bug() {
+  local topic_dir="$1" bug_dir="$2" outcome="$3" id side
+  id="$(standard__bug_id "$topic_dir" "$bug_dir")"
+  side="$(bugbank_field "$bug_dir" side)"
+  case "$outcome" in
+    detected)
+      STANDARD_BUGS_VALID=$(( STANDARD_BUGS_VALID + 1 ))
+      STANDARD_BUGS_DETECTED=$(( STANDARD_BUGS_DETECTED + 1 )) ;;
+    missed)
+      STANDARD_BUGS_VALID=$(( STANDARD_BUGS_VALID + 1 ))
+      score_hint "$id" "$(bugbank_field "$bug_dir" hint)" "$(bugbank_field "$bug_dir" title)" ;;
+    no-apply) score_warn "${id}: patch.diff does not apply to the current app; bug ignored." ;;
+    no-build) score_warn "${id}: the ${side:-backend} does not build with this bug; bug ignored." ;;
+    no-compile) score_warn "${id}: the app does not compile with this bug; bug ignored." ;;
+    *) score_warn "${id}: the review could not run this bug (${outcome:-no result}); bug ignored." ;;
+  esac
+}
+
+# Number of stacks used for the bug bank: topic.yml parallel_stacks, or
+# REVIEW_PARALLEL_STACKS; never more than the number of bugs.
+standard__parallel_stacks() {
+  local bugs="$1" wanted
+  wanted="${REVIEW_PARALLEL_STACKS:-$(topic '.parallel_stacks')}"
+  wanted="${wanted:-1}"
+  [[ "$(topic '.requires_stack')" == "true" ]] || wanted=1
+  (( wanted > bugs )) && wanted="$bugs"
+  (( wanted < 1 )) && wanted=1
+  echo "$wanted"
+}
+
 standard__bug_bank() {
-  local topic_dir="$1" bug_dir id title hint side status index=0 total
+  local topic_dir="$1" bug_dir index=0 total workers outcome
   local -a bugs
   mapfile -t bugs < <(standard__bug_dirs "$topic_dir")
   total=${#bugs[@]}
+  workers="$(standard__parallel_stacks "$total")"
+  if (( workers > 1 )); then
+    standard__bug_bank_parallel "$topic_dir" "$workers" "${bugs[@]}"
+    return 0
+  fi
   for bug_dir in "${bugs[@]}"; do
     index=$(( index + 1 ))
-    id="$(standard__bug_id "$topic_dir" "$bug_dir")"
-    title="$(bugbank_field "$bug_dir" title)"
-    hint="$(bugbank_field "$bug_dir" hint)"
-    side="$(bugbank_field "$bug_dir" side)"
-    score_progress "bug ${index}/${total}: ${id}"
+    score_progress "bug ${index}/${total}: $(standard__bug_id "$topic_dir" "$bug_dir")"
+    outcome="$(standard__run_bug "$bug_dir")"
+    standard__record_bug "$topic_dir" "$bug_dir" "$outcome"
+  done
+}
 
-    if ! bugbank_apply "$bug_dir"; then
-      score_warn "${id}: patch.diff does not apply to the current app; bug ignored."
-      continue
+# --- Parallel bug bank (topics with a stack) ---------------------------------
+#
+# Worker k gets bugs k, k+N, k+2N... It works on its own copy of the
+# workspace (sources copied, dependencies hard-linked: patches must never
+# reach the main copy) and its own stack: compose project <project>-w<k>,
+# host ports shifted by 1000 x k. Outcomes are written to a file and recorded
+# afterwards in the original bug order, so the report does not depend on timing.
+
+STANDARD_WORKER_PROJECTS=()
+STANDARD_WORKER_DIRS=()
+
+standard__workers_cleanup() {
+  local project dir
+  for project in "${STANDARD_WORKER_PROJECTS[@]}"; do
+    docker compose -p "$project" down -v --remove-orphans >/dev/null 2>&1 || true
+  done
+  for dir in "${STANDARD_WORKER_DIRS[@]}"; do
+    rm -rf "$dir" 2>/dev/null || true
+  done
+}
+
+standard__worker_workspace() {
+  local target="$1" module
+  mkdir -p "$target"
+  tar -C "$REVIEW_WORKSPACE" --exclude='node_modules' --exclude='target' --exclude='dist' --exclude='.angular' \
+    --exclude='test-results' --exclude='playwright-report' -cf - app | tar -C "$target" -xf -
+  for module in frontend e2e; do
+    if [[ -d "${REVIEW_WORKSPACE}/app/${module}/node_modules" ]]; then
+      cp -al "${REVIEW_WORKSPACE}/app/${module}/node_modules" "${target}/app/${module}/node_modules" 2>/dev/null \
+        || cp -a "${REVIEW_WORKSPACE}/app/${module}/node_modules" "${target}/app/${module}/node_modules"
     fi
-    if [[ "$(topic '.requires_stack')" == "true" ]] && ! stack_rebuild "${side:-backend}"; then
-      score_warn "${id}: the ${side:-backend} does not build with this bug; bug ignored."
-      bugbank_restore
-      continue
-    fi
+  done
+}
 
-    status=0
-    runner_run || status=$?
-    bugbank_restore
+standard__bug_bank_parallel() {
+  local topic_dir="$1" workers="$2"
+  shift 2
+  local -a bugs=("$@")
+  local k results main_workspace="$REVIEW_WORKSPACE" base_project="$STACK_PROJECT"
+  results="${REVIEW_WORKSPACE}/bug-results"
+  mkdir -p "$results"
+  review_on_cleanup standard__workers_cleanup
+  score_progress "checking ${#bugs[@]} bugs on ${workers} stacks in parallel"
 
-    case "$status" in
-      0)
-        STANDARD_BUGS_VALID=$(( STANDARD_BUGS_VALID + 1 ))
-        score_hint "$id" "$hint" "$title" ;;
-      1 | 124)
-        STANDARD_BUGS_VALID=$(( STANDARD_BUGS_VALID + 1 ))
-        STANDARD_BUGS_DETECTED=$(( STANDARD_BUGS_DETECTED + 1 )) ;;
-      *)
-        score_warn "${id}: the app does not compile with this bug; bug ignored." ;;
-    esac
+  local -a pids=()
+  for (( k = 1; k <= workers; k++ )); do
+    local worker_dir="${main_workspace}-w${k}"
+    STANDARD_WORKER_PROJECTS+=("${base_project}-w${k}")
+    STANDARD_WORKER_DIRS+=("$worker_dir")
+    (
+      set +e
+      standard__worker_workspace "$worker_dir"
+      RUNNER_MODULE_DIR="${RUNNER_MODULE_DIR/#"$main_workspace"/"$worker_dir"}"
+      RUNNER_TEST_DIR="${RUNNER_TEST_DIR/#"$main_workspace"/"$worker_dir"}"
+      REVIEW_WORKSPACE="$worker_dir"
+      REVIEW_CLEANUP_FNS=()
+      STACK_PROJECT="${base_project}-w${k}"
+      STACK_FLOCI_PORT=$(( STACK_FLOCI_PORT + 1000 * k ))
+      STACK_BACKEND_PORT=$(( STACK_BACKEND_PORT + 1000 * k ))
+      STACK_FRONTEND_PORT=$(( STACK_FRONTEND_PORT + 1000 * k ))
+      if ! (stack_up >/dev/null 2>&1); then
+        exit 0 # no result files: the bugs are reported as not run
+      fi
+      export API_BASE_URL="http://localhost:${STACK_BACKEND_PORT}"
+      export E2E_BASE_URL="http://localhost:${STACK_FRONTEND_PORT}"
+      STACK_LOG="${worker_dir}/stack.log"
+      local i
+      for (( i = k - 1; i < ${#bugs[@]}; i += workers )); do
+        score_progress "stack ${k}: bug $(( i + 1 ))/${#bugs[@]}"
+        standard__run_bug "${bugs[i]}" >"${results}/$(( i + 1 ))" 2>/dev/null
+      done
+    ) &
+    pids+=("$!")
+  done
+  local pid
+  for pid in "${pids[@]}"; do
+    wait "$pid" || true
+  done
+
+  local i outcome
+  for (( i = 0; i < ${#bugs[@]}; i++ )); do
+    outcome="$(cat "${results}/$(( i + 1 ))" 2>/dev/null || true)"
+    standard__record_bug "$topic_dir" "${bugs[i]}" "$outcome"
   done
 }
 
