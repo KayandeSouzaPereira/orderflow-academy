@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "command",
+  "commandRunner": { "command": "node node_modules/vitest/vitest.mjs run --config stryker/vitest.config.mts" },
+  "coverageAnalysis": "off",
+  "mutate": ["src/app/**/*.ts", "!src/app/**/*.spec.ts"],
+  "mutator": { "excludedMutations": ["StringLiteral", "ObjectLiteral", "ArrayDeclaration"] },
+  "reporters": ["clear-text", "json"],
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+  "concurrency": 4,
+  "ignorePatterns": [".angular", "reports", "dist"],
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": "always"
+}

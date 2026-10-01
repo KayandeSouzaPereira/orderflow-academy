@@ -4,12 +4,14 @@
 #
 #   mutation_run <kind> <target-classes> <target-tests>
 #
-# Prints "<killed> <total>" on success. Target lists are comma-separated
-# (e.g. "dev.orderflow.domain.*"). PIT is deterministic for the same code, so
-# the same commit always gets the same score.
+# Prints "<killed> <total>" on success. Target lists are comma-separated.
 #
-# Backend (PIT) is supported; the frontend (Stryker) runner comes with topic
-# A-04 (phase 4).
+#   backend   PIT; targets are classes ("dev.orderflow.domain.*"), tests are
+#             test classes. Deterministic for the same code.
+#   frontend  Stryker (app/frontend/stryker.config.json); targets are source
+#             files, tests are spec files. Stryker runs Vitest once per mutant
+#             through its 'command' runner (its Vitest runner cannot activate
+#             mutants when the Analog Angular plugin compiles the code).
 # -----------------------------------------------------------------------------
 
 MUTATION_LOG=""
@@ -18,9 +20,36 @@ mutation_run() {
   local kind="$1" target_classes="$2" target_tests="$3"
   case "$kind" in
     backend) mutation__pit "$target_classes" "$target_tests" ;;
-    *) score_fatal "mutation testing is not available for kind '${kind}' yet" \
+    frontend) mutation__stryker "$target_classes" "$target_tests" ;;
+    *) score_fatal "mutation testing is not available for kind '${kind}'" \
          "Remove 'mutation' from topic.yml or set weights.mutation to 0." ;;
   esac
+}
+
+mutation__stryker_run() {
+  local module="$1" targets="$2" tests="$3"
+  (cd "$module" && STRYKER_TEST_FILES="$tests" node node_modules/@stryker-mutator/core/bin/stryker.js run \
+    --mutate "$targets" --concurrency "${MUTATION_THREADS:-4}")
+}
+
+mutation__stryker() {
+  local targets="$1" tests="$2"
+  local module="${REVIEW_WORKSPACE}/app/frontend"
+  local report="${module}/reports/mutation/mutation.json"
+  MUTATION_LOG="${REVIEW_WORKSPACE}/mutation.log"
+  rm -rf "${module}/reports/mutation"
+
+  if ! run_with_timeout "${MUTATION_TIMEOUT:-900}" mutation__stryker_run "$module" "$targets" "$tests" \
+    >"$MUTATION_LOG" 2>&1; then
+    return 1
+  fi
+  [[ -f "$report" ]] || return 1
+
+  # Killed and timed-out mutants count as detected; ignored or invalid ones are left out.
+  jq -r '[.files[].mutants[] | .status] as $all
+    | ($all | map(select(. == "Killed" or . == "Timeout")) | length) as $killed
+    | ($all | map(select(. == "Killed" or . == "Timeout" or . == "Survived" or . == "NoCoverage")) | length) as $total
+    | "\($killed) \($total)"' "$report"
 }
 
 mutation__pit_maven() {

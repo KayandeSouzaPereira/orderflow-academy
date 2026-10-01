@@ -2,8 +2,10 @@
 # -----------------------------------------------------------------------------
 # Runs the tests of one topic inside the workspace.
 #
-#   runner_init <kind> <test-package>      chooses module and test filter
-#   runner_run [maven args...]             runs the topic's tests once
+#   runner_init <kind> <test-package> [test-file...]
+#                                          chooses module and test filter
+#                                          (frontend: spec files relative to app/frontend)
+#   runner_run [extra args...]             runs the topic's tests once
 #
 # runner_run returns:
 #   0   all tests passed            1   at least one test failed
@@ -11,8 +13,9 @@
 #   3   test code does not compile  124 time limit reached
 # and sets RUNNER_TESTS, RUNNER_FAILED (counts) and RUNNER_LOG (full output).
 #
-# Supported kinds: backend (app/backend) and api (app/api-tests). frontend and
-# e2e runners are added with the topics that need them (phases 4 and 5).
+# Supported kinds: backend (app/backend), api (app/api-tests) and frontend
+# (app/frontend, Angular unit tests through 'ng test'). The e2e runner comes
+# with track C (phase 5).
 # -----------------------------------------------------------------------------
 
 RUNNER_KIND=""
@@ -24,15 +27,23 @@ RUNNER_TESTS=0
 RUNNER_FAILED=0
 RUNNER_LOG=""
 RUNNER_RUN_COUNT=0
+RUNNER_FRONTEND_SPECS=()
 
 runner_init() {
   RUNNER_KIND="$1"
   RUNNER_TEST_PACKAGE="$2"
+  shift 2
   case "$RUNNER_KIND" in
     backend) RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/backend" ;;
     api) RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/api-tests" ;;
+    frontend)
+      RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/frontend"
+      RUNNER_FRONTEND_SPECS=("$@")
+      (( ${#RUNNER_FRONTEND_SPECS[@]} > 0 )) || score_fatal "topic.yml has no test_files" \
+        "List the spec files, e.g. test_files: [src/app/cart/cart.service.spec.ts]."
+      return 0 ;;
     *) score_fatal "kind '${RUNNER_KIND}' has no test runner yet" \
-         "Supported kinds: backend, api. Use kind: custom and score the topic in its review.sh." ;;
+         "Supported kinds: backend, api, frontend. Use kind: custom and score the topic in its review.sh." ;;
   esac
   [[ -n "$RUNNER_TEST_PACKAGE" ]] || score_fatal "topic.yml has no test_package" \
     "Set test_package, e.g. dev.orderflow.tracks.a01."
@@ -41,6 +52,13 @@ runner_init() {
 
 # Lists the test source files of the topic (absolute paths, one per line).
 runner_test_files() {
+  if [[ "$RUNNER_KIND" == "frontend" ]]; then
+    local spec
+    for spec in "${RUNNER_FRONTEND_SPECS[@]}"; do
+      [[ -f "${RUNNER_MODULE_DIR}/${spec}" ]] && echo "${RUNNER_MODULE_DIR}/${spec}"
+    done
+    return 0
+  fi
   [[ -d "$RUNNER_TEST_DIR" ]] || return 0
   find "$RUNNER_TEST_DIR" -type f -name '*.java' | sort
 }
@@ -50,8 +68,14 @@ runner_run() {
   RUNNER_LOG="${REVIEW_WORKSPACE}/run-${RUNNER_RUN_COUNT}.log"
   RUNNER_TESTS=0
   RUNNER_FAILED=0
-  runner__maven "$@"
+  if [[ "$RUNNER_KIND" == "frontend" ]]; then
+    runner__angular "$@"
+  else
+    runner__maven "$@"
+  fi
 }
+
+# --- Maven (backend, api) ----------------------------------------------------
 
 runner__mvnw() {
   (cd "$RUNNER_MODULE_DIR" && chmod +x mvnw && ./mvnw -B -ntp "$@")
@@ -100,10 +124,72 @@ runner__count_results() {
   done
 }
 
+# --- Angular (frontend) ------------------------------------------------------
+
+# Makes node_modules available in the workspace: hard links to the
+# participant's install when possible (fast, no copy), npm ci otherwise.
+runner_frontend_dependencies() {
+  local source="${SCORE_REPO_ROOT}/app/frontend/node_modules" target="${RUNNER_MODULE_DIR}/node_modules"
+  [[ -d "$target" ]] && return 0
+  if [[ -d "$source" ]]; then
+    score_progress "linking frontend dependencies"
+    cp -al "$source" "$target" 2>/dev/null && return 0
+    rm -rf "$target"
+  fi
+  score_progress "installing frontend dependencies (npm ci)"
+  (cd "$RUNNER_MODULE_DIR" && npm ci --no-audit --no-fund >"${REVIEW_WORKSPACE}/npm-ci.log" 2>&1) \
+    || score_fatal "npm ci failed in the reviewed copy" "Run 'npm ci' in app/frontend yourself and check the error."
+}
+
+runner__ng() {
+  (cd "$RUNNER_MODULE_DIR" && node node_modules/@angular/cli/bin/ng.js "$@")
+}
+
+runner__angular() {
+  local report="${REVIEW_WORKSPACE}/vitest-${RUNNER_RUN_COUNT}.json" spec status=0
+  local -a includes=()
+  for spec in "${RUNNER_FRONTEND_SPECS[@]}"; do
+    [[ -f "${RUNNER_MODULE_DIR}/${spec}" ]] && includes+=("--include=${spec}")
+  done
+  rm -f "$report"
+  # The first reporter (json) writes to --outputFile; 'default' keeps a readable log.
+  run_with_timeout "$RUNNER_TIMEOUT" runner__ng test --watch=false \
+    --reporters=json --reporters=default "--output-file=${report}" \
+    "${includes[@]}" "$@" >"$RUNNER_LOG" 2>&1 || status=$?
+
+  if [[ -f "$report" ]]; then
+    RUNNER_TESTS="$(jq -r '.numTotalTests // 0' "$report")"
+    RUNNER_FAILED="$(jq -r '(.numFailedTests // 0) + (.numRuntimeErrorTestSuites // 0)' "$report")"
+  fi
+  if (( status == 124 )); then
+    return 124
+  fi
+  if [[ ! -f "$report" ]] && (( status != 0 )); then
+    # The build failed before any test ran: was it the app or a spec?
+    if grep -E '[.]spec[.]ts' "$RUNNER_LOG" | grep -qiE 'error|TS[0-9]+'; then
+      return 3
+    fi
+    return 2
+  fi
+  if (( status != 0 || RUNNER_FAILED > 0 )); then
+    return 1
+  fi
+  return 0
+}
+
+# --- Reporting ---------------------------------------------------------------
+
 # Prints the last lines of the log that explain a failure (compile errors or
 # failing tests), for the participant.
 runner_failure_summary() {
   [[ -f "$RUNNER_LOG" ]] || return 0
+  if [[ "$RUNNER_KIND" == "frontend" ]]; then
+    sed $'s/\x1b\\[[0-9;]*m//g' "$RUNNER_LOG" \
+      | grep -E 'FAIL|×|Error:|error TS|ERROR' \
+      | head -n 8 \
+      | sed -e "s#${REVIEW_WORKSPACE}/##g" -e 's/^/          /'
+    return 0
+  fi
   grep -E '^\[ERROR\] .*(\.java|Tests run:|FAIL|expected|but was)' "$RUNNER_LOG" \
     | grep -vE 'To see the full stack trace|Re-run Maven|Help 1|^\[ERROR\] *$' \
     | head -n 8 \

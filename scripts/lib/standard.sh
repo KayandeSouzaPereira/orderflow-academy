@@ -78,7 +78,10 @@ review_standard() {
   review_workspace_create
   [[ -n "$STANDARD_OVERLAY" ]] && review_workspace_overlay "$STANDARD_OVERLAY"
 
-  runner_init "$kind" "$(topic '.test_package')"
+  local -a specs=()
+  mapfile -t specs < <(topic '(.test_files // [])[]')
+  runner_init "$kind" "$(topic '.test_package')" "${specs[@]}"
+  [[ "$kind" == "frontend" ]] && runner_frontend_dependencies
   RUNNER_TIMEOUT="$(topic '.timeouts.test_run_seconds')"
   RUNNER_TIMEOUT="${RUNNER_TIMEOUT:-300}"
   mapfile -t PRACTICE_FILES < <(runner_test_files)
@@ -113,8 +116,9 @@ standard__prechecks() {
   local kind="$1"
   case "$kind" in
     backend | api) review_require_java ;;
+    frontend) review_require_tools node ;;
     *) score_fatal "topic kind '${kind}' cannot use the standard review" \
-         "Use kind backend or api, or write a custom review.sh with the score.sh API." ;;
+         "Use kind backend, api or frontend, or write a custom review.sh with the score.sh API." ;;
   esac
   if [[ "$(topic '.requires_stack')" == "true" || "$(topic '.requires_docker')" == "true" ]]; then
     review_require_docker
@@ -146,8 +150,10 @@ standard__required_practices() {
 
 standard__require_test_files() {
   (( ${#PRACTICE_FILES[@]} > 0 )) && return 0
-  score_hint "no-tests" "Write your tests in package $(topic '.test_package') (see the topic README)."
-  score_gate false "no test files in $(topic '.test_package')"
+  local where
+  where="$(topic '.test_package // (.test_files // [] | join(", "))')"
+  score_hint "no-tests" "Write your tests in ${where} (see the topic README)."
+  score_gate false "no test files in ${where}"
 }
 
 standard__gate() {
@@ -290,7 +296,13 @@ standard__mutation() {
   local classes tests
   classes="$(topic '.mutation.target_classes // [] | join(",")')"
   tests="$(topic '.mutation.target_tests // [] | join(",")')"
-  tests="${tests:-$(topic '.test_package').*}"
+  if [[ -z "$tests" ]]; then
+    if [[ "$(topic '.kind')" == "frontend" ]]; then
+      tests="$(topic '.test_files // [] | join(",")')"
+    else
+      tests="$(topic '.test_package').*"
+    fi
+  fi
   [[ -n "$classes" ]] || score_fatal "topic.yml has a mutation weight but no mutation.target_classes" \
     "Add mutation: { target_classes: [\"dev.orderflow.domain.*\"] }."
   score_progress "mutation testing on ${classes} (this is the slow part; use --quick to skip)"

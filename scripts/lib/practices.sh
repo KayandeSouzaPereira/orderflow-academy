@@ -118,6 +118,48 @@ practice__java_tests() {
   done
 }
 
+# Same as practice__java_tests for TypeScript specs: one line per it()/test(),
+# "<title>\t<has-assertion 0|1>".
+practice__ts_tests() {
+  local file
+  for file in "${PRACTICE_FILES[@]}"; do
+    awk -v asserts="$PRACTICE_ASSERTIONS|expectOne[(]|expectNone[(]" '
+      function strip(s) {
+        gsub(/"([^"\\]|\\.)*"/, "\"\"", s)
+        gsub(/\047([^\047\\]|\\.)*\047/, "\047\047", s)
+        gsub(/`[^`]*`/, "``", s)
+        sub(/\/\/.*$/, "", s)
+        return s
+      }
+      {
+        if (!inbody && match($0, /(^|[^A-Za-z_.])(it|test)[[:space:]]*[(][[:space:]]*['\''"`]/)) {
+          title = substr($0, RSTART + RLENGTH)
+          sub(/['\''"`].*$/, "", title)
+          inbody = 1; depth = 0; started = 0; found = 0
+        }
+        if (inbody) {
+          code = strip($0)
+          if (code ~ asserts) found = 1
+          n = split(code, chars, "")
+          for (i = 1; i <= n; i++) {
+            if (chars[i] == "{") { depth++; started = 1 }
+            else if (chars[i] == "}") depth--
+          }
+          if (started && depth <= 0) { printf "%s\t%d\n", title, found; inbody = 0 }
+        }
+      }' "$file"
+  done
+}
+
+# Test methods of the topic, Java or TypeScript.
+practice__tests() {
+  if [[ "${PRACTICE_FILES[0]:-}" == *.ts ]]; then
+    practice__ts_tests
+  else
+    practice__java_tests
+  fi
+}
+
 practice__set_detail() {
   local list
   list="$(head -n 5 | paste -sd ',' - | sed 's/,/, /g')"
@@ -152,7 +194,7 @@ practice_no_hardcoded_endpoints() {
 
 practice_every_test_asserts() {
   local missing
-  missing="$(practice__java_tests | awk -F'\t' '$2 == 0 { print $1 }')"
+  missing="$(practice__tests | awk -F'\t' '$2 == 0 { print $1 }')"
   [[ -z "$missing" ]] && return 0
   practice__set_detail <<<"$missing"
   return 1

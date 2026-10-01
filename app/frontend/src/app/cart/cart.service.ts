@@ -62,6 +62,7 @@ export class CartService {
   }
 }
 
+// Stryker disable all: persistence helpers, not part of the cart rules under test.
 function loadLines(): CartLine[] {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? '[]');
@@ -80,3 +81,4 @@ function saveLines(lines: CartLine[]): void {
     // Storage unavailable (private mode, quota): the cart just won't survive a reload.
   }
 }
+// Stryker restore all
