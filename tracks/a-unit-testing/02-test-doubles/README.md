@@ -10,8 +10,26 @@ does to its collaborators.
 
 The application layer (`app/backend/src/main/java/dev/orderflow/application/`)
 depends only on interfaces (ports): `ProductRepository`, `OrderRepository`,
-`EventPublisher`, `IdGenerator`, plus a `java.time.Clock`. Every class has a
-plain constructor, so you can build it with `new` and Mockito mocks.
+`EventPublisher`, `IdGenerator`, plus a `java.time.Clock`. Tests run with
+`@QuarkusTest`: inject the real use case and replace the ports with mocks.
+
+```java
+@QuarkusTest
+class CreateOrderUseCaseTest {
+
+    @Inject CreateOrderUseCase useCase;          // the real class under test
+    @InjectMock ProductRepository products;      // Mockito mocks, reset after each test
+    @InjectMock OrderRepository orders;
+    @InjectMock EventPublisher events;
+    @InjectMock IdGenerator ids;
+
+    @BeforeEach
+    void setUp() {
+        when(ids.newId()).thenReturn("order-1");
+        QuarkusMock.installMockForType(TestData.fixedClock(), Clock.class); // time stands still
+    }
+}
+```
 
 **`CreateOrderUseCase.execute(command)`**
 
@@ -37,20 +55,22 @@ plain constructor, so you can build it with `new` and Mockito mocks.
 ## Your task
 
 1. Write your tests in `app/backend/src/test/java/dev/orderflow/tracks/a02/`.
-2. Use real objects for the domain (`OrderValidator`, `OrderPricing`,
-   `OrderStateMachine`), mocks or fakes for the ports, and
-   `Clock.fixed(...)` for time (or `TestData.fixedClock()` from
-   `dev.orderflow.support`).
-3. Do not start Quarkus: no `@QuarkusTest`, no `@InjectMock`.
+2. Annotate every test class with `@QuarkusTest`. `@Inject` the use case; the
+   domain classes it uses (`OrderValidator`, `OrderPricing`,
+   `OrderStateMachine`) stay real. Replace the ports with `@InjectMock`, and
+   fix the time with `QuarkusMock.installMockForType(TestData.fixedClock(), Clock.class)`
+   (`TestData` is in `dev.orderflow.support`).
+3. Do not build the use case with `new`, and never mock the class under test.
 
 ## How you are scored
 
 | Criterion | Weight | Measured by |
 | --- | --- | --- |
+| Prerequisite | - | `quarkus-test-required`: every test class has `@QuarkusTest` (otherwise 0) |
 | Gate | - | your tests compile and pass against the real code |
 | Bug bank | 50 | share of planted bugs in the two use cases your tests catch |
 | Mutation score | 25 | PIT on `CreateOrderUseCase` and `CancelOrderUseCase`; full points at 80% |
-| Practices | 25 | no `Thread.sleep`, no disabled tests, every test asserts, `should<Result>When<Condition>` names, stable in random order, no `@QuarkusTest` |
+| Practices | 25 | no `Thread.sleep`, no disabled tests, every test asserts, `should<Result>When<Condition>` names, stable in random order |
 
 ## Hints
 

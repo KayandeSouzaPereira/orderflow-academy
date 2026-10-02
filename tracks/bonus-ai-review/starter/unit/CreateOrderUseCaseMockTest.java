@@ -6,6 +6,7 @@ import dev.orderflow.domain.Order;
 import dev.orderflow.domain.OrderStatus;
 import dev.orderflow.domain.OrderValidator.RequestedItem;
 import dev.orderflow.support.TestData;
+import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** Verifies that the use case returns what it should. Generated with an AI assistant. */
+@QuarkusTest
 class CreateOrderUseCaseMockTest {
 
     @Test

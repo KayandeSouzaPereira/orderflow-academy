@@ -10,6 +10,17 @@ broke. Then fix three badly written tests.
 
 `OrderPricing` (`app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java`)
 computes the total of an order. It is pure Java: no framework, no database.
+Tests still run with `@QuarkusTest` (the convention of this academy) and get
+the class from Quarkus instead of creating it:
+
+```java
+@QuarkusTest
+class OrderPricingTest {
+
+    @Inject
+    OrderPricing pricing;
+}
+```
 
 The rules (all amounts are integers in cents):
 
@@ -28,8 +39,8 @@ two tests.
 ## Your task
 
 1. Write your tests in `app/backend/src/test/java/dev/orderflow/tracks/a01/`
-   (package `dev.orderflow.tracks.a01`). Cover every rule above, including
-   the boundaries.
+   (package `dev.orderflow.tracks.a01`), each class with `@QuarkusTest`.
+   Cover every rule above, including the boundaries.
 2. Copy `starter/OrderPricingStarterTest.java` into the same folder (keep the
    class name) and fix its three tests:
    - one has a generic name that says nothing about the expected result;
@@ -42,6 +53,7 @@ two tests.
 
 | Criterion | Weight | Measured by |
 | --- | --- | --- |
+| Prerequisite | - | `quarkus-test-required`: every test class has `@QuarkusTest` (otherwise 0) |
 | Gate | - | your tests compile and pass against the real code |
 | Bug bank | 50 | share of planted bugs in `OrderPricing` your tests catch |
 | Mutation score | 25 | PIT on `OrderPricing`; full points at 80% |

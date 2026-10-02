@@ -34,7 +34,7 @@ practice_title() {
     random-order-stable) echo "Tests pass in random order" ;;
     idempotent-data) echo "Tests pass twice on the same environment" ;;
     black-box-only) echo "Only the public API is used" ;;
-    no-quarkus-test) echo "Unit tests do not start Quarkus" ;;
+    quarkus-test-required) echo "Every test class runs with @QuarkusTest" ;;
     starter-fixed) echo "The starter tests were fixed" ;;
     tdd-history) echo "Tests come before or with the code (Git history)" ;;
     traceability) echo "Every manual case has an automated test" ;;
@@ -61,7 +61,7 @@ practice_hint() {
     random-order-stable) echo "A test relies on state left by another one. Give each test its own data and no shared mutable fields." ;;
     idempotent-data) echo "Running the suite again fails. Create unique data per run (new products, random e-mails) instead of fixed ids." ;;
     black-box-only) echo "Talk to the system only through HTTP: no backend classes, no AWS SDK, no direct database checks." ;;
-    no-quarkus-test) echo "Build the class under test with 'new' and Mockito mocks; @QuarkusTest belongs to integration tests." ;;
+    quarkus-test-required) echo "Annotate every test class with @QuarkusTest: @Inject the class under test and replace its collaborators with @InjectMock (see the topic README)." ;;
     starter-fixed) echo "Copy the starter test into your package and fix all three problems: missing assertion, two behaviours in one test, generic name." ;;
     tdd-history) echo "Commit a failing test first (or together with the code), then the code that makes it pass. Small commits make this visible." ;;
     traceability) echo "Give every manual case a heading with its id (## MC-01 ...) and tag at least one test with @Tag(\"MC-01\")." ;;
@@ -249,11 +249,19 @@ practice_black_box_only() {
   return 1
 }
 
-practice_no_quarkus_test() {
-  local hits
-  hits="$(practice__grep '@Quarkus(Test|IntegrationTest|ComponentTest|MainTest)|@InjectMock|@TestHTTPEndpoint')"
-  [[ -z "$hits" ]] && return 0
-  practice__set_detail <<<"$hits"
+# Every backend test class (a file under app/backend/ with @Test,
+# @ParameterizedTest or @RepeatedTest) is annotated with @QuarkusTest. Black-box
+# API tests (app/api-tests/) are not concerned. Lines: the offending files.
+practice_quarkus_test_required() {
+  local file missing=()
+  for file in "${PRACTICE_FILES[@]}"; do
+    [[ "$file" == */app/backend/* && "$file" == *.java ]] || continue
+    grep -qE '@(Test|ParameterizedTest|RepeatedTest)\b' "$file" || continue
+    grep -qE '^[[:space:]]*@(io\.quarkus\.test\.junit\.)?QuarkusTest\b' "$file" || missing+=("${file##*/}")
+  done
+  (( ${#missing[@]} == 0 )) && return 0
+  PRACTICE_DETAIL="no @QuarkusTest: $(printf '%s, ' "${missing[@]}")"
+  PRACTICE_DETAIL="${PRACTICE_DETAIL%, }"
   return 1
 }
 

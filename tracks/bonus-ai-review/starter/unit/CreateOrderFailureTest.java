@@ -6,10 +6,11 @@ import dev.orderflow.application.port.EventPublisher;
 import dev.orderflow.application.port.OrderRepository;
 import dev.orderflow.application.port.ProductRepository;
 import dev.orderflow.domain.Order;
-import dev.orderflow.domain.OrderPricing;
-import dev.orderflow.domain.OrderValidator;
 import dev.orderflow.domain.OrderValidator.RequestedItem;
 import dev.orderflow.support.TestData;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,27 +21,29 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /** Failure scenarios of order creation. Generated with an AI assistant. */
+@QuarkusTest
 class CreateOrderFailureTest {
 
-    private ProductRepository productRepository;
-    private OrderRepository orderRepository;
-    private EventPublisher eventPublisher;
-    private CreateOrderUseCase useCase;
+    @Inject
+    CreateOrderUseCase useCase;
+
+    @InjectMock
+    ProductRepository productRepository;
+
+    @InjectMock
+    OrderRepository orderRepository;
+
+    @InjectMock
+    EventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
-        productRepository = mock(ProductRepository.class);
-        orderRepository = mock(OrderRepository.class);
-        eventPublisher = mock(EventPublisher.class);
         when(productRepository.findById("p-1"))
                 .thenReturn(Optional.of(TestData.aProduct().withId("p-1").withPriceInCents(1_000).build()));
         when(productRepository.reserveStock(anyString(), anyInt())).thenReturn(true);
-        useCase = new CreateOrderUseCase(productRepository, orderRepository, eventPublisher,
-                new OrderValidator(), new OrderPricing(), () -> "order-1", TestData.fixedClock());
     }
 
     @Test

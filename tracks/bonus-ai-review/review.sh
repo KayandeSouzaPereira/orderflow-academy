@@ -14,12 +14,12 @@ HALLUCINATED_RESULT="0 0"
 
 # Called by review_standard right after the gate, while the Surefire reports
 # are still those of the gate run.
-# shellcheck disable=SC2329 # invoked by review_standard
+# shellcheck disable=SC2317,SC2329 # invoked by review_standard
 topic_after_gate() {
   HALLUCINATED_RESULT="$(runner_class_results HallucinatedApiTest)"
 }
 
-# shellcheck disable=SC2329 # invoked by review_standard
+# shellcheck disable=SC2317,SC2329 # invoked by review_standard
 topic_report() {
   local tests failed
   read -r tests failed <<<"$HALLUCINATED_RESULT"

@@ -17,5 +17,5 @@ practices:
   - every-test-asserts
   - naming-convention
   - random-order-stable
-  - no-quarkus-test
+  - { rule: quarkus-test-required, required: true }
 timeouts: { test_run_seconds: 300 }

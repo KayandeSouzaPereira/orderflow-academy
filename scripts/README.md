@@ -136,7 +136,7 @@ changes in `app/` (commit unrelated work first):
 | `random-order-stable` | suite passes twice with random class and method order (fixed seeds) |
 | `idempotent-data` | suite passes again on the same environment |
 | `black-box-only` | always a prerequisite: no backend or AWS SDK in `api-tests` |
-| `no-quarkus-test` | no `@QuarkusTest`, `@InjectMock` and friends (pure unit tests) |
+| `quarkus-test-required` | every backend test class (with `@Test`) is annotated with `@QuarkusTest`; API tests are not concerned |
 | `starter-fixed` | the starter test class was copied and fixed (`file`, `forbidden_names`, `min_tests`) |
 | `tdd-history` | Git history: tests change in or right before most implementation commits (`implementation`, `min_percent`); skipped with `--overlay` |
 | `traceability` | every `## MC-NN` case of `cases_file` has a `@Tag("MC-NN")` test; at least `min_cases` cases |

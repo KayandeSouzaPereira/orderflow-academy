@@ -13,8 +13,9 @@ after the 10% discount of large orders. The public API is ready in `starter/`:
 
 - `Coupon`: code, type (`PERCENTAGE` or `FIXED`), value, minimum order, validity dates;
 - `CouponException`: thrown with a `Reason` when a coupon cannot be applied;
-- `CouponPolicy`: `apply(long totalInCents, List<Coupon> coupons)`, with a `Clock`
-  in the constructor so tests control "today".
+- `CouponPolicy`: `apply(long totalInCents, List<Coupon> coupons)`. It is a
+  `@Singleton` bean that receives the application `Clock` in its constructor,
+  so tests control "today".
 
 **Specification.** Checks happen in this order; the first that fails wins.
 
@@ -33,9 +34,11 @@ after the 10% discount of large orders. The public API is ready in `starter/`:
 
 1. Copy the three files from `starter/` to
    `app/backend/src/main/java/dev/orderflow/domain/coupon/` without changing
-   the public API (`Coupon` and `CouponException` stay exactly as they are).
+   the public API (`Coupon` and `CouponException` stay exactly as they are,
+   and `CouponPolicy` keeps `@Singleton` and its `Clock` constructor).
 2. Write tests in `app/backend/src/test/java/dev/orderflow/tracks/a03/`, one
-   rule at a time, and make each pass with the simplest code.
+   rule at a time, and make each pass with the simplest code. Test classes
+   use `@QuarkusTest` and `@Inject CouponPolicy policy;`.
 3. **Commit often.** The review reads your Git history: for at least 60% of
    the commits that change `CouponPolicy.java`, the tests must change in the
    same commit or in the commit just before. When pairing, add
@@ -45,6 +48,7 @@ after the 10% discount of large orders. The public API is ready in `starter/`:
 
 | Criterion | Weight | Measured by |
 | --- | --- | --- |
+| Prerequisite | - | `quarkus-test-required`: every test class has `@QuarkusTest` (otherwise 0) |
 | Gate | - | your tests pass on your implementation **and** on a reference implementation of the same spec |
 | Bug bank | 50 | the review swaps in the reference implementation with planted bugs; share your tests catch |
 | Mutation score | 25 | PIT on **your** `CouponPolicy`; full points at 80% |
@@ -57,7 +61,9 @@ on the reference implementation and stops the review at the gate.
 ## Hints
 
 - Start with the simplest rule (no coupon), then add one rule per cycle.
-- `Clock.fixed(Instant.parse("2026-03-10T12:00:00Z"), ZoneOffset.UTC)` freezes "today".
+- Freeze "today" for each test with
+  `QuarkusMock.installMockForType(Clock.fixed(Instant.parse("2026-03-10T12:00:00Z"), ZoneOffset.UTC), Clock.class)`
+  in a `@BeforeEach`: the policy then sees that clock.
 - Every "inclusive" and "at least" in the spec deserves a test on the exact boundary.
 - Assert the `reason()` of a `CouponException`, not only its type.
 

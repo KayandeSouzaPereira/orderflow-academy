@@ -7,9 +7,10 @@ import dev.orderflow.application.port.InvoiceStorage;
 import dev.orderflow.application.port.OrderRepository;
 import dev.orderflow.domain.Order;
 import dev.orderflow.domain.OrderCreated;
-import dev.orderflow.domain.OrderStateMachine;
 import dev.orderflow.support.TestData;
-import org.junit.jupiter.api.BeforeEach;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -17,26 +18,24 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** Unit tests for the order processor. Generated with an AI assistant. */
+@QuarkusTest
 class ProcessOrderCreatedUseCaseTest {
 
-    private OrderRepository orderRepository;
-    private InvoiceGenerator invoiceGenerator;
-    private InvoiceStorage invoiceStorage;
-    private ProcessOrderCreatedUseCase useCase;
+    @Inject
+    ProcessOrderCreatedUseCase useCase;
 
-    @BeforeEach
-    void setUp() {
-        orderRepository = mock(OrderRepository.class);
-        invoiceGenerator = mock(InvoiceGenerator.class);
-        invoiceStorage = mock(InvoiceStorage.class);
-        useCase = new ProcessOrderCreatedUseCase(orderRepository, invoiceGenerator, invoiceStorage,
-                new OrderStateMachine(), TestData.fixedClock());
-    }
+    @InjectMock
+    OrderRepository orderRepository;
+
+    @InjectMock
+    InvoiceGenerator invoiceGenerator;
+
+    @InjectMock
+    InvoiceStorage invoiceStorage;
 
     @Test
     void shouldConfirmOrderWhenOrderIsPending() {

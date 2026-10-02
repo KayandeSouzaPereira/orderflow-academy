@@ -10,6 +10,7 @@ mutation:
   target_classes: ["dev.orderflow.domain.OrderPricing"]
   target_score: 80
 practices:
+  - { rule: quarkus-test-required, required: true }
   - no-thread-sleep
   - no-disabled-tests
   - every-test-asserts
