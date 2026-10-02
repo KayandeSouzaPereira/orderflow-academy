@@ -1,0 +1,29 @@
+{
+  "topic": "00-fundamentals",
+  "title": "Fundamentals - what to test, where and why",
+  "user": "Kayan de Souza",
+  "branch": "HEAD",
+  "commit": "038b809",
+  "score": 100,
+  "max": 100,
+  "threshold": 70,
+  "status": "passed",
+  "passed": true,
+  "partial": false,
+  "gate": {
+    "passed": true,
+    "detail": "10 of 10 questions answered"
+  },
+  "criteria": [
+    {
+      "name": "Quiz",
+      "earned": 100,
+      "max": 100,
+      "detail": "10/10",
+      "ok": true
+    }
+  ],
+  "missedBugs": [],
+  "practiceHints": [],
+  "warnings": []
+}

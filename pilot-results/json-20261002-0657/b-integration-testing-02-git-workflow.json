@@ -1,0 +1,29 @@
+{
+  "topic": "b-integration-testing/02-git-workflow",
+  "title": "Git workflow - branches, commits, conflicts and pull requests",
+  "user": "Kayan de Souza",
+  "branch": "HEAD",
+  "commit": "038b809",
+  "score": 100,
+  "max": 100,
+  "threshold": 70,
+  "status": "passed",
+  "passed": true,
+  "partial": false,
+  "gate": {
+    "passed": true,
+    "detail": "4 commits since main"
+  },
+  "criteria": [
+    {
+      "name": "Git workflow",
+      "earned": 100,
+      "max": 100,
+      "detail": "5/5",
+      "ok": true
+    }
+  ],
+  "missedBugs": [],
+  "practiceHints": [],
+  "warnings": []
+}

@@ -1,0 +1,36 @@
+{
+  "topic": "b-integration-testing/09-manual-to-automated",
+  "title": "From manual cases to automated tests",
+  "user": "Kayan de Souza",
+  "branch": "HEAD",
+  "commit": "038b809",
+  "score": 100,
+  "max": 100,
+  "threshold": 70,
+  "status": "passed",
+  "passed": true,
+  "partial": false,
+  "gate": {
+    "passed": true,
+    "detail": "28 tests passing"
+  },
+  "criteria": [
+    {
+      "name": "Bug bank",
+      "earned": 70,
+      "max": 70,
+      "detail": "20/20",
+      "ok": true
+    },
+    {
+      "name": "Practices",
+      "earned": 30,
+      "max": 30,
+      "detail": "7/7",
+      "ok": true
+    }
+  ],
+  "missedBugs": [],
+  "practiceHints": [],
+  "warnings": []
+}

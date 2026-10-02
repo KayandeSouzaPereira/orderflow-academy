@@ -1,0 +1,5 @@
+══ Review: a-unit-testing/04-angular-unit ══
+   user: Kayan de Souza  |  branch: HEAD  |  commit: 038b809
+
+[✘] Environment: npm ci failed in the reviewed copy
+          Hint: Run 'npm ci' in app/frontend yourself and check the error.

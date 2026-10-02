@@ -1,0 +1,9 @@
+══ Review: 00-fundamentals ══
+   user: Kayan de Souza  |  branch: HEAD  |  commit: 038b809
+
+[✔] Gate: 10 of 10 questions answered ............ OK
+[✔] Quiz ......................................... 10/10  100/100
+
+TOTAL: 100/100  PASSED (threshold 70)
+
+Results written to /c/dev/test-sandbox/pilot-results/json-20261002-0657/00-fundamentals.json

@@ -1,0 +1,70 @@
+<h1>Cart</h1>
+
+@if (cart.isEmpty()) {
+  <p>Your cart is empty. <a routerLink="/">Browse the catalog</a>.</p>
+} @else {
+  <table class="lines">
+    <caption class="visually-hidden">Products in the cart</caption>
+    <thead>
+      <tr>
+        <th scope="col">Product</th>
+        <th scope="col">Unit price</th>
+        <th scope="col">Quantity</th>
+        <th scope="col">Subtotal</th>
+        <th scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (line of cart.items(); track line.product.id) {
+        <tr>
+          <th scope="row">{{ line.product.name }}</th>
+          <td>{{ line.product.priceInCents | money }}</td>
+          <td>
+            <label class="visually-hidden" [for]="'qty-' + line.product.id">Quantity of {{ line.product.name }}</label>
+            <input
+              type="number"
+              [id]="'qty-' + line.product.id"
+              [min]="minQuantity"
+              [max]="maxQuantity"
+              [value]="line.quantity"
+              (change)="updateQuantity(line.product.id, $event)"
+            />
+          </td>
+          <td>{{ line.quantity * line.product.priceInCents | money }}</td>
+          <td>
+            <button type="button" class="link" [attr.aria-label]="'Remove ' + line.product.name" (click)="cart.remove(line.product.id)">
+              Remove
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <p class="subtotal">
+    Subtotal: <strong>{{ cart.subtotalInCents() | money }}</strong>
+    <span class="hint">Orders above R$500.00 get 10% off at checkout.</span>
+  </p>
+
+  <form class="checkout" [formGroup]="checkoutForm" (ngSubmit)="placeOrder()" novalidate>
+    <h2>Checkout</h2>
+    <label for="email">E-mail</label>
+    <input id="email" type="email" autocomplete="email" formControlName="email" [attr.aria-invalid]="email.touched && email.invalid" aria-describedby="email-error" />
+    <p id="email-error" class="field-error">
+      @if (email.touched && email.hasError('required')) {
+        Enter your e-mail address.
+      } @else if (email.touched && email.hasError('email')) {
+        Enter a valid e-mail address.
+      }
+    </p>
+
+    <button type="submit" [disabled]="!canSubmit()">Place order</button>
+    @if (submitting()) {
+      <p role="status" class="loading">Placing order…</p>
+    }
+  </form>
+}
+
+@if (error()) {
+  <p role="alert" class="error">{{ error() }}</p>
+}
