@@ -8,9 +8,11 @@ import dev.orderflow.application.port.ProductRepository;
 import dev.orderflow.domain.Order;
 import dev.orderflow.domain.OrderItem;
 import dev.orderflow.domain.OrderPricing;
-import dev.orderflow.domain.OrderValidator;
 import dev.orderflow.domain.OrderValidator.RequestedItem;
 import dev.orderflow.support.TestData;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,22 +22,30 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /** Checks the total calculated when an order is created. Generated with an AI assistant. */
+@QuarkusTest
 class CreateOrderTotalTest {
 
-    private ProductRepository productRepository;
-    private CreateOrderUseCase useCase;
-    private final OrderPricing pricing = new OrderPricing();
+    @Inject
+    CreateOrderUseCase useCase;
+
+    @Inject
+    OrderPricing pricing;
+
+    @InjectMock
+    ProductRepository productRepository;
+
+    @InjectMock
+    OrderRepository orderRepository;
+
+    @InjectMock
+    EventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
-        productRepository = mock(ProductRepository.class);
         when(productRepository.reserveStock(anyString(), anyInt())).thenReturn(true);
-        useCase = new CreateOrderUseCase(productRepository, mock(OrderRepository.class), mock(EventPublisher.class),
-                new OrderValidator(), pricing, () -> "order-1", TestData.fixedClock());
     }
 
     private void givenProduct(String id, long priceInCents) {

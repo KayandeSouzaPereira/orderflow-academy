@@ -1,5 +1,7 @@
 package dev.orderflow.domain.coupon;
 
+import jakarta.inject.Singleton;
+
 import java.time.Clock;
 import java.util.List;
 
@@ -7,6 +9,7 @@ import java.util.List;
  * Applies discount coupons to an order total. Implement it test first,
  * following the rules in the topic README. Keep this public API unchanged.
  */
+@Singleton
 public class CouponPolicy {
 
     private final Clock clock;

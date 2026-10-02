@@ -1,5 +1,7 @@
 package dev.orderflow.domain.coupon;
 
+import jakarta.inject.Singleton;
+
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.List;
  * Reference implementation used by the review: bugs are planted in this file.
  * Participants agreed not to open the bugs/ folder.
  */
+@Singleton
 public class CouponPolicy {
 
     private final Clock clock;

@@ -23,20 +23,23 @@ import java.time.Clock;
 import java.util.UUID;
 
 /**
- * Wires the framework-free domain and application classes into CDI. Keeping
- * the wiring here lets unit tests build those classes with plain {@code new}.
+ * Wires the framework-free domain and application classes into CDI.
+ *
+ * <p>The clock and the id generator are {@code @ApplicationScoped} (not
+ * {@code @Singleton}) so that {@code @QuarkusTest} classes can replace them
+ * with {@code @InjectMock} or {@code QuarkusMock.installMockForType(...)}.
  */
 @ApplicationScoped
 public class ApplicationBeans {
 
     @Produces
-    @Singleton
+    @ApplicationScoped
     Clock clock() {
         return Clock.systemUTC();
     }
 
     @Produces
-    @Singleton
+    @ApplicationScoped
     IdGenerator idGenerator() {
         return () -> UUID.randomUUID().toString();
     }

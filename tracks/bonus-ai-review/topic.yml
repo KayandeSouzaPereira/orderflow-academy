@@ -22,6 +22,7 @@ mutation:
   target_score: 75
 practices:
   - { rule: original-tests-kept, list: original-tests.txt, required: true }
+  - { rule: quarkus-test-required, required: true }
   - no-thread-sleep
   - no-disabled-tests
   - every-test-asserts

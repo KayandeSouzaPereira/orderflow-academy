@@ -3,20 +3,24 @@ package dev.orderflow.tracks.bonus;
 import dev.orderflow.application.CreateOrderUseCase;
 import dev.orderflow.application.CreateOrderUseCase.Command;
 import dev.orderflow.application.port.EventPublisher;
+import dev.orderflow.application.port.IdGenerator;
 import dev.orderflow.application.port.OrderRepository;
 import dev.orderflow.application.port.ProductRepository;
 import dev.orderflow.domain.DomainException;
 import dev.orderflow.domain.Order;
 import dev.orderflow.domain.OrderCreated;
-import dev.orderflow.domain.OrderPricing;
 import dev.orderflow.domain.OrderStatus;
-import dev.orderflow.domain.OrderValidator;
 import dev.orderflow.domain.OrderValidator.RequestedItem;
 import dev.orderflow.domain.Product;
 import dev.orderflow.support.TestData;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusMock;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,25 +28,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** Unit tests for CreateOrderUseCase, generated with an AI assistant. */
+@QuarkusTest
 class CreateOrderUseCaseTest {
 
-    private ProductRepository productRepository;
-    private OrderRepository orderRepository;
-    private EventPublisher eventPublisher;
-    private CreateOrderUseCase useCase;
+    @Inject
+    CreateOrderUseCase useCase;
+
+    @InjectMock
+    ProductRepository productRepository;
+
+    @InjectMock
+    OrderRepository orderRepository;
+
+    @InjectMock
+    EventPublisher eventPublisher;
+
+    @InjectMock
+    IdGenerator idGenerator;
 
     @BeforeEach
     void setUp() {
-        productRepository = mock(ProductRepository.class);
-        orderRepository = mock(OrderRepository.class);
-        eventPublisher = mock(EventPublisher.class);
-        useCase = new CreateOrderUseCase(productRepository, orderRepository, eventPublisher,
-                new OrderValidator(), new OrderPricing(), () -> "order-1", TestData.fixedClock());
+        when(idGenerator.newId()).thenReturn("order-1");
+        QuarkusMock.installMockForType(TestData.fixedClock(), Clock.class);
     }
 
     private Product givenProduct(String id, long priceInCents) {

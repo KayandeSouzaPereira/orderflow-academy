@@ -2,6 +2,8 @@ package dev.orderflow.tracks.a01;
 
 import dev.orderflow.domain.OrderItem;
 import dev.orderflow.domain.OrderPricing;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -13,9 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * app/backend/src/test/java/dev/orderflow/tracks/a01/ and fix each one.
  * Keep the class name: the review looks for it.
  */
+@QuarkusTest
 class OrderPricingStarterTest {
 
-    private final OrderPricing pricing = new OrderPricing();
+    @Inject
+    OrderPricing pricing;
 
     @Test
     void test1() {
