@@ -33,7 +33,7 @@ child=""
 
 # Sends TERM to the running topic review (a background subshell ignores
 # SIGINT, so Ctrl+C is forwarded as TERM).
-# shellcheck disable=SC2329 # invoked by the trap below
+# shellcheck disable=SC2317,SC2329 # invoked by the trap below
 forward_signal() {
   kill -TERM "$child" 2>/dev/null || true
 }
