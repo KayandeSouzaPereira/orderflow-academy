@@ -30,10 +30,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Only warnings and errors block. Info and style notes (e.g. SC2317, which
+      # older shellcheck versions report for functions called by a trap) are
+      # listed in a collapsed group without failing the job.
       - name: shellcheck
         run: |
           mapfile -t files < <(find scripts tracks app/aws-init -name '*.sh' -not -path '*/node_modules/*' | sort)
-          shellcheck -x "${files[@]}"
+          shellcheck -x --severity=warning "${files[@]}"
+          echo "::group::Info and style notes (not blocking)"
+          shellcheck -x "${files[@]}" || true
+          echo "::endgroup::"
 
       - name: Topics and bugs are well formed, every patch applies
         run: ./scripts/dev/validate-structure.sh
