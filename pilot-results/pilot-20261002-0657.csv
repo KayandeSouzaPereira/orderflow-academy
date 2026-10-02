@@ -1,0 +1,23 @@
+topic,score,max,status,minutes,limit_minutes,within_limit,missed_bugs
+00-fundamentals,100,100,passed,1,10,yes,-
+a-unit-testing/01-test-anatomy,100,100,passed,3,10,yes,-
+a-unit-testing/02-test-doubles,100,100,passed,3,10,yes,-
+a-unit-testing/03-tdd-kata,100,100,passed,3,10,yes,-
+a-unit-testing/04-angular-unit,"","",error (exit 3),1,10,yes,-
+a-unit-testing/05-adapter-integration,100,100,passed,11,10,no,-
+b-integration-testing/01-java-basics,100,100,passed,1,15,yes,-
+b-integration-testing/02-git-workflow,100,100,passed,1,15,yes,-
+b-integration-testing/03-api-test-setup,100,100,passed,3,15,yes,-
+b-integration-testing/04-api-testing,100,100,passed,4,15,yes,-
+b-integration-testing/05-test-data,100,100,passed,4,15,yes,-
+b-integration-testing/06-async-side-effects,100,100,passed,7,15,yes,-
+b-integration-testing/07-lifecycle-and-concurrency,100,100,passed,6,15,yes,-
+b-integration-testing/08-ci-pipeline,100,100,passed,1,15,yes,-
+b-integration-testing/09-manual-to-automated,100,100,passed,12,15,yes,-
+bonus-ai-review,100,100,passed,10,25,yes,-
+bonus-ai-review/part2-history,100,100,passed,3,25,yes,-
+c-e2e-testing/01-playwright-basics,100,100,passed,2,15,yes,-
+c-e2e-testing/02-user-flows,100,100,passed,3,15,yes,-
+c-e2e-testing/03-page-objects-and-fixtures,100,100,passed,2,15,yes,-
+c-e2e-testing/04-network-and-resilience,100,100,passed,2,15,yes,-
+c-e2e-testing/05-e2e-in-ci,100,100,passed,1,15,yes,-

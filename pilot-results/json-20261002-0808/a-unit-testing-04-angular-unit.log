@@ -1,0 +1,11 @@
+══ Review: a-unit-testing/04-angular-unit ══
+   user: Kayan de Souza  |  branch: HEAD  |  commit: 038b809
+
+[✔] Gate: 18 tests passing ....................... OK
+[✔] Bug bank ..................................... 5/5    50/50
+[✘] Mutation score (70%, target 80%) ............. 22/25
+[✔] Practices .................................... 3/3    25/25
+
+TOTAL: 97/100  PASSED (threshold 70)
+
+Results written to /c/dev/test-sandbox/pilot-results/json-20261002-0808/a-unit-testing-04-angular-unit.json

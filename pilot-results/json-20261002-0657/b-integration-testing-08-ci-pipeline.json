@@ -1,0 +1,29 @@
+{
+  "topic": "b-integration-testing/08-ci-pipeline",
+  "title": "CI pipeline for the API tests",
+  "user": "Kayan de Souza",
+  "branch": "HEAD",
+  "commit": "038b809",
+  "score": 100,
+  "max": 100,
+  "threshold": 70,
+  "status": "passed",
+  "passed": true,
+  "partial": false,
+  "gate": {
+    "passed": true,
+    "detail": "qa-test.yml found"
+  },
+  "criteria": [
+    {
+      "name": "Workflow checks",
+      "earned": 100,
+      "max": 100,
+      "detail": "5/5",
+      "ok": true
+    }
+  ],
+  "missedBugs": [],
+  "practiceHints": [],
+  "warnings": []
+}
