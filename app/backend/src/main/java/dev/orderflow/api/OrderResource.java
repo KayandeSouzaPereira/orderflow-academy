@@ -1,6 +1,7 @@
 package dev.orderflow.api;
 
 import dev.orderflow.api.dto.CreateOrderRequest;
+import dev.orderflow.api.dto.HistoryEntryResponse;
 import dev.orderflow.api.dto.OrderResponse;
 import dev.orderflow.api.dto.PresignedUrlResponse;
 import dev.orderflow.api.error.ErrorResponse;
@@ -104,5 +105,14 @@ public class OrderResource {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public PresignedUrlResponse invoice(@PathParam("id") String id) {
         return PresignedUrlResponse.from(queries.invoiceUrl(id));
+    }
+
+    @GET
+    @Path("/{id}/history")
+    @APIResponse(responseCode = "200", description = "Status history of the order, oldest first")
+    @APIResponse(responseCode = "404", description = "Unknown order",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    public List<HistoryEntryResponse> history(@PathParam("id") String id) {
+        return queries.history(id).stream().map(HistoryEntryResponse::from).toList();
     }
 }

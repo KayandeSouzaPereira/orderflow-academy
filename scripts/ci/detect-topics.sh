@@ -77,6 +77,11 @@ watched() {
       echo "app/backend/src/test/java/${package//.//}/"
       jq -r '.implementation_swap.path // empty' <<<"$json" ;;
     api) echo "app/api-tests/src/test/java/${package//.//}/" ;;
+    multi)
+      while IFS=$'	' read -r suite_kind suite_package; do
+        [[ "$suite_kind" == "api" ]] && echo "app/api-tests/src/test/java/${suite_package//.//}/"
+        [[ "$suite_kind" == "backend" ]] && echo "app/backend/src/test/java/${suite_package//.//}/"
+      done < <(jq -r '(.suites // [])[] | [.kind, .test_package] | @tsv' <<<"$json") ;;
     frontend)
       while IFS= read -r spec; do
         [[ -n "$spec" ]] && echo "app/frontend/${spec}"

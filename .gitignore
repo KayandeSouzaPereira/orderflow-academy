@@ -19,3 +19,6 @@ Thumbs.db
 
 # Env
 .env
+
+# Pilot results (local reports)
+pilot-results/

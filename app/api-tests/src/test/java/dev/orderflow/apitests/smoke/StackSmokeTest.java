@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -46,5 +47,10 @@ class StackSmokeTest {
                         .get("/api/orders/{id}", orderId)
                         .then().statusCode(200)
                         .body("status", equalTo("CONFIRMED")));
+
+        given(TestApi.spec())
+                .get("/api/orders/{id}/history", orderId)
+                .then().statusCode(200)
+                .body("status", contains("PENDING", "CONFIRMED"));
     }
 }

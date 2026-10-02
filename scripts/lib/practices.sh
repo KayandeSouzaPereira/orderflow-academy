@@ -38,6 +38,8 @@ practice_title() {
     starter-fixed) echo "The starter tests were fixed" ;;
     tdd-history) echo "Tests come before or with the code (Git history)" ;;
     traceability) echo "Every manual case has an automated test" ;;
+    no-empty-catch) echo "No swallowed exceptions in tests" ;;
+    original-tests-kept) echo "Every original test still exists" ;;
     no-wait-for-timeout) echo "No fixed waits (waitForTimeout)" ;;
     no-test-only) echo "No test.only, test.skip or test.fixme" ;;
     accessible-locators) echo "Locators by role, label or text" ;;
@@ -63,6 +65,8 @@ practice_hint() {
     starter-fixed) echo "Copy the starter test into your package and fix all three problems: missing assertion, two behaviours in one test, generic name." ;;
     tdd-history) echo "Commit a failing test first (or together with the code), then the code that makes it pass. Small commits make this visible." ;;
     traceability) echo "Give every manual case a heading with its id (## MC-01 ...) and tag at least one test with @Tag(\"MC-01\")." ;;
+    no-empty-catch) echo "An empty catch hides failures: assert the exception (assertThatThrownBy) or let it fail the test." ;;
+    original-tests-kept) echo "Fix the tests, do not delete or rename them: every original test method must still exist under its name." ;;
     no-wait-for-timeout) echo "Wait for what you expect to see: await expect(locator).toHaveText(...) or expect.poll(...) retry until it holds." ;;
     no-test-only) echo "Remove .only/.skip/.fixme before you push: they hide tests from the run." ;;
     accessible-locators) echo "Use page.getByRole/getByLabel/getByText; CSS or XPath only for [data-testid] when nothing accessible exists." ;;
@@ -347,6 +351,67 @@ practice_traceability() {
   (( ${#problems[@]} == 0 )) && return 0
   PRACTICE_DETAIL="$(printf '%s; ' "${problems[@]}")"
   PRACTICE_DETAIL="${PRACTICE_DETAIL%; }"
+  return 1
+}
+
+# Prints "<ClassName>#<method>" for every test method of the given Java files, sorted.
+practice_list_tests() {
+  local file saved=("${PRACTICE_FILES[@]}") name
+  for file in "$@"; do
+    PRACTICE_FILES=("$file")
+    name="$(basename "$file" .java)"
+    practice__java_tests | cut -f1 | sed "s/^/${name}#/"
+  done | sort
+  PRACTICE_FILES=("${saved[@]}")
+}
+
+# catch blocks with nothing inside (comments do not count). Lines of the form
+# file:line, like the other static rules.
+practice_no_empty_catch() {
+  local file hits=""
+  for file in "${PRACTICE_FILES[@]}"; do
+    hits+="$(awk -v name="${file##*/}" '
+      function strip(s) { gsub(/\/\*.*\*\//, "", s); sub(/\/\/.*$/, "", s); return s }
+      {
+        code = strip($0)
+        if (waiting) {
+          if (code ~ /^[[:space:]]*$/) next
+          if (code ~ /^[[:space:]]*[}]/) printf "%s:%d\n", name, start
+          waiting = 0
+        }
+        if (code ~ /catch[[:space:]]*([(][^)]*[)])?[[:space:]]*[{][[:space:]]*[}]/) {
+          printf "%s:%d\n", name, NR
+        } else if (code ~ /catch[[:space:]]*([(][^)]*[)])?[[:space:]]*[{][[:space:]]*$/) {
+          waiting = 1; start = NR
+        }
+      }' "$file")"
+    [[ -n "$hits" ]] && hits+=$'\n'
+  done
+  hits="$(grep -v '^$' <<<"$hits" || true)"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# Parameter: list (file with "<Class>#<method>" lines, relative to the topic folder).
+# Every listed test must still exist in a class of that name.
+practice_original_tests_kept() {
+  local list missing=() entry
+  list="${SCORE_TOPIC_DIR}/$(practice_param '.list')"
+  if [[ ! -f "$list" ]]; then
+    PRACTICE_DETAIL="list file $(practice_param '.list') not found"
+    return 1
+  fi
+  local actual
+  actual="$(practice_list_tests "${PRACTICE_FILES[@]}")"
+  while IFS= read -r entry; do
+    [[ -z "$entry" || "$entry" == \#* ]] && continue
+    grep -qxF -- "$entry" <<<"$actual" || missing+=("$entry")
+  done <"$list"
+  (( ${#missing[@]} == 0 )) && return 0
+  PRACTICE_DETAIL="missing: $(printf '%s, ' "${missing[@]:0:4}")"
+  PRACTICE_DETAIL="${PRACTICE_DETAIL%, }"
+  (( ${#missing[@]} > 4 )) && PRACTICE_DETAIL+=" and $(( ${#missing[@]} - 4 )) more"
   return 1
 }
 

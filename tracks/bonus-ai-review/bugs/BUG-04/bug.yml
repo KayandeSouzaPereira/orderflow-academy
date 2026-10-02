@@ -1,0 +1,6 @@
+id: BUG-04
+title: "The discount is applied twice to large orders"
+hint: "Where does the expected value of a total come from? It must not come from the code being tested."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java

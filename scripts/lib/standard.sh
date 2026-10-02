@@ -78,8 +78,12 @@ review_standard() {
   review_workspace_create
   [[ -n "$STANDARD_OVERLAY" ]] && review_workspace_overlay "$STANDARD_OVERLAY"
 
+  # random_seeds: topics choose the seeds of random-order-stable (default: 2 fixed seeds).
+  local -a seeds=()
+  mapfile -t seeds < <(topic '(.random_seeds // [])[] | tostring')
+  (( ${#seeds[@]} == 0 )) || PRACTICE_SEEDS=("${seeds[@]}")
   local -a specs=()
-  mapfile -t specs < <(topic '(.test_files // ([.test_dir] | map(select(. != null))))[]')
+  mapfile -t specs < <(topic '(.suites // [] | map(.kind + "|" + .test_package))[], (.test_files // ([.test_dir] | map(select(. != null))))[]')
   runner_init "$kind" "$(topic '.test_package')" "${specs[@]}"
   [[ "$kind" == "frontend" ]] && runner_frontend_dependencies
   [[ "$kind" == "e2e" ]] && runner_e2e_dependencies
@@ -101,6 +105,7 @@ review_standard() {
   fi
 
   standard__gate
+  standard__hook topic_after_gate
 
   # Runtime practices need the original code, so they run before the bug bank.
   standard__evaluate_practices
@@ -113,10 +118,19 @@ review_standard() {
   score_end
 }
 
+# Calls a hook function a topic's review.sh may define (before review_standard
+# runs): topic_after_gate (the Surefire reports are those of the gate run) and
+# topic_report (adds criteria after the standard ones).
+standard__hook() {
+  if declare -F "$1" >/dev/null; then
+    "$1"
+  fi
+}
+
 standard__prechecks() {
   local kind="$1"
   case "$kind" in
-    backend | api) review_require_java ;;
+    backend | api | multi) review_require_java ;;
     frontend | e2e) review_require_tools node ;;
     *) score_fatal "topic kind '${kind}' cannot use the standard review" \
          "Use kind backend, api or frontend, or write a custom review.sh with the score.sh API." ;;
@@ -152,7 +166,8 @@ standard__required_practices() {
 standard__require_test_files() {
   (( ${#PRACTICE_FILES[@]} > 0 )) && return 0
   local where
-  where="$(topic '.test_package // .test_dir // (.test_files // [] | join(", "))')"
+  # An empty string is not "missing" for jq's //, so filter explicitly.
+  where="$(topic '[.test_package, .test_dir, (.test_files // [] | join(", ")), (.suites // [] | map(.test_package) | join(", "))] | map(select(. != null and . != "")) | first')"
   score_hint "no-tests" "Write your tests in ${where} (see the topic README)."
   score_gate false "no test files in ${where}"
 }
@@ -250,14 +265,21 @@ STANDARD_BUGS_DETECTED=0
 # Bug folders of the topic plus, with topic.yml 'bug_sources', those of other
 # topics (B-09 reuses the banks of B-03 to B-07).
 standard__bug_dirs() {
-  local topic_dir="$1" source
-  bugbank_list "$topic_dir"
-  while IFS= read -r source; do
-    [[ -n "$source" ]] || continue
-    [[ -d "${SCORE_REPO_ROOT}/tracks/${source}" ]] || score_fatal "bug source '${source}' not found" \
-      "Check bug_sources in topic.yml."
-    bugbank_list "${SCORE_REPO_ROOT}/tracks/${source}"
-  done < <(topic '(.bug_sources // [])[]')
+  local topic_dir="$1" source dir
+  {
+    bugbank_list "$topic_dir"
+    while IFS= read -r source; do
+      [[ -n "$source" ]] || continue
+      [[ -d "${SCORE_REPO_ROOT}/tracks/${source}" ]] || score_fatal "bug source '${source}' not found" \
+        "Check bug_sources in topic.yml."
+      bugbank_list "${SCORE_REPO_ROOT}/tracks/${source}"
+    done < <(topic '(.bug_sources // [])[]')
+  } | while IFS= read -r dir; do
+    # REVIEW_BUGS="BUG-02 BUG-05": check only those bugs (maintainer debugging).
+    if [[ -z "${REVIEW_BUGS:-}" || " ${REVIEW_BUGS} " == *" $(basename "$dir") "* ]]; then
+      echo "$dir"
+    fi
+  done
 }
 
 # Bug id shown in the report: BUG-NN, or BUG-<topic id>-NN for borrowed bugs.
@@ -281,6 +303,10 @@ standard__run_bug() {
     return 0
   fi
   if [[ "$(topic '.requires_stack')" == "true" ]] && ! stack_rebuild "${side:-backend}"; then
+    if [[ -n "$STANDARD_LOG_DIR" && -f "${STACK_LOG:-}" ]]; then
+      grep -vE '^#[0-9]+ (sha256|extracting|DONE|CACHED)' "$STACK_LOG" | tail -n 20 \
+        >"${STANDARD_LOG_DIR}/$(basename "$bug_dir").log" 2>/dev/null || true
+    fi
     bugbank_restore
     echo "no-build"
     return 0
@@ -307,7 +333,12 @@ standard__record_bug() {
       STANDARD_BUGS_VALID=$(( STANDARD_BUGS_VALID + 1 ))
       score_hint "$id" "$(bugbank_field "$bug_dir" hint)" "$(bugbank_field "$bug_dir" title)" ;;
     no-apply) score_warn "${id}: patch.diff does not apply to the current app; bug ignored." ;;
-    no-build) score_warn "${id}: the ${side:-backend} does not build with this bug; bug ignored." ;;
+    no-build)
+      score_warn "${id}: the ${side:-backend} does not build with this bug; bug ignored."
+      if [[ -n "$STANDARD_LOG_DIR" && -f "${STANDARD_LOG_DIR}/$(basename "$bug_dir").log" ]]; then
+        printf '   … %s: last lines of the build output:\n' "$id" >&2
+        sed 's/^/     | /' "${STANDARD_LOG_DIR}/$(basename "$bug_dir").log" >&2
+      fi ;;
     no-compile) score_warn "${id}: the app does not compile with this bug; bug ignored." ;;
     *) score_warn "${id}: the review could not run this bug (${outcome:-no result}); bug ignored." ;;
   esac
@@ -327,6 +358,8 @@ standard__parallel_stacks() {
 
 standard__bug_bank() {
   local topic_dir="$1" bug_dir index=0 total workers outcome
+  STANDARD_LOG_DIR="${REVIEW_WORKSPACE}/bug-logs"
+  mkdir -p "$STANDARD_LOG_DIR"
   local -a bugs
   mapfile -t bugs < <(standard__bug_dirs "$topic_dir")
   total=${#bugs[@]}
@@ -353,6 +386,7 @@ standard__bug_bank() {
 
 STANDARD_WORKER_PROJECTS=()
 STANDARD_WORKER_DIRS=()
+STANDARD_LOG_DIR=""   # excerpts of builds that failed, shown in the report
 
 standard__workers_cleanup() {
   local project dir
@@ -449,7 +483,10 @@ standard__mutation() {
   [[ -n "$classes" ]] || score_fatal "topic.yml has a mutation weight but no mutation.target_classes" \
     "Add mutation: { target_classes: [\"dev.orderflow.domain.*\"] }."
   score_progress "mutation testing on ${classes} (this is the slow part; use --quick to skip)"
-  STANDARD_MUTATION="$(mutation_run "$(topic '.kind')" "$classes" "$tests")" || {
+  local mutation_kind
+  mutation_kind="$(topic '.kind')"
+  [[ "$mutation_kind" == "multi" ]] && mutation_kind=backend
+  STANDARD_MUTATION="$(mutation_run "$mutation_kind" "$classes" "$tests")" || {
     score_warn "mutation testing failed to run (see ${MUTATION_LOG}); counted as 0%."
     STANDARD_MUTATION="0 0"
   }
@@ -513,4 +550,6 @@ standard__report() {
     earned="$(review_round_ratio "$weight" "$STANDARD_PRACTICES_WEIGHT_PASSED" "$STANDARD_PRACTICES_WEIGHT_TOTAL")"
     score_criterion "Practices" "$earned" "$weight" "${STANDARD_PRACTICES_PASSED}/${STANDARD_PRACTICES_TOTAL}"
   fi
+
+  standard__hook topic_report
 }

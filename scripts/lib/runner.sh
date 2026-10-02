@@ -13,9 +13,11 @@
 #   3   test code does not compile  124 time limit reached
 # and sets RUNNER_TESTS, RUNNER_FAILED (counts) and RUNNER_LOG (full output).
 #
-# Supported kinds: backend (app/backend), api (app/api-tests) and frontend
-# (app/frontend, Angular unit tests through 'ng test'). The e2e runner comes
-# with track C (phase 5).
+# Supported kinds: backend (app/backend), api (app/api-tests), frontend
+# (app/frontend, Angular unit tests through 'ng test'), e2e (Playwright) and
+# multi: several Maven suites run together, as in the bonus challenge
+# (topic.yml: kind: multi, suites: [{kind: backend, test_package: ...}, ...]).
+# A multi run sums the tests of its suites; its status is the most severe one.
 # -----------------------------------------------------------------------------
 
 RUNNER_KIND=""
@@ -28,6 +30,7 @@ RUNNER_FAILED=0
 RUNNER_LOG=""
 RUNNER_RUN_COUNT=0
 RUNNER_FRONTEND_SPECS=()
+RUNNER_SUITES=()   # multi: "kind|test.package" entries
 
 runner_init() {
   RUNNER_KIND="$1"
@@ -36,6 +39,10 @@ runner_init() {
   case "$RUNNER_KIND" in
     backend) RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/backend" ;;
     api) RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/api-tests" ;;
+    multi)
+      RUNNER_SUITES=("$@")
+      (( ${#RUNNER_SUITES[@]} > 0 )) || score_fatal "topic.yml has no suites"         "List them: suites: [{kind: backend, test_package: ...}, {kind: api, test_package: ...}]."
+      return 0 ;;
     frontend)
       RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/frontend"
       RUNNER_FRONTEND_SPECS=("$@")
@@ -55,8 +62,28 @@ runner_init() {
   RUNNER_TEST_DIR="${RUNNER_MODULE_DIR}/src/test/java/${RUNNER_TEST_PACKAGE//.//}"
 }
 
+# Points the runner at one Maven suite ("backend" or "api") of a multi topic.
+runner__select_suite() {
+  local kind="$1"
+  RUNNER_TEST_PACKAGE="$2"
+  case "$kind" in
+    backend) RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/backend" ;;
+    api) RUNNER_MODULE_DIR="${REVIEW_WORKSPACE}/app/api-tests" ;;
+    *) score_fatal "suite kind '${kind}' is not supported" "Suites can be backend or api." ;;
+  esac
+  RUNNER_TEST_DIR="${RUNNER_MODULE_DIR}/src/test/java/${RUNNER_TEST_PACKAGE//.//}"
+}
+
 # Lists the test source files of the topic (absolute paths, one per line).
 runner_test_files() {
+  if [[ "$RUNNER_KIND" == "multi" ]]; then
+    local suite
+    for suite in "${RUNNER_SUITES[@]}"; do
+      runner__select_suite "${suite%%|*}" "${suite#*|}"
+      [[ -d "$RUNNER_TEST_DIR" ]] && find "$RUNNER_TEST_DIR" -type f -name '*.java' | sort
+    done
+    return 0
+  fi
   if [[ "$RUNNER_KIND" == "frontend" ]]; then
     local spec
     for spec in "${RUNNER_FRONTEND_SPECS[@]}"; do
@@ -80,8 +107,61 @@ runner_run() {
   case "$RUNNER_KIND" in
     frontend) runner__angular "$@" ;;
     e2e) runner__playwright "$@" ;;
+    multi) runner__multi "$@" ;;
     *) runner__maven "$@" ;;
   esac
+}
+
+# --- Several Maven suites (multi) --------------------------------------------
+
+# Severity of a run status, to keep the worst one: compile errors in the app
+# (2) > in the tests (3) > time out (124) > failing tests (1) > passed (0).
+runner__severity() {
+  case "$1" in
+    2) echo 5 ;;
+    3) echo 4 ;;
+    124) echo 3 ;;
+    1) echo 2 ;;
+    *) echo 0 ;;
+  esac
+}
+
+runner__multi() {
+  local combined="$RUNNER_LOG" suite status worst=0 total=0 failed=0
+  : >"$combined"
+  for suite in "${RUNNER_SUITES[@]}"; do
+    runner__select_suite "${suite%%|*}" "${suite#*|}"
+    RUNNER_LOG="${combined}.${suite%%|*}"
+    RUNNER_TESTS=0
+    RUNNER_FAILED=0
+    status=0
+    runner__maven "$@" || status=$?
+    total=$(( total + RUNNER_TESTS ))
+    failed=$(( failed + RUNNER_FAILED ))
+    { printf '=== suite %s ===
+' "$suite"; cat "$RUNNER_LOG"; } >>"$combined"
+    if (( $(runner__severity "$status") > $(runner__severity "$worst") )); then
+      worst=$status
+    fi
+  done
+  RUNNER_LOG="$combined"
+  RUNNER_TESTS=$total
+  RUNNER_FAILED=$failed
+  return "$worst"
+}
+
+# Prints "<tests> <failed>" for the test class <ClassName> in the Surefire
+# reports of the last run (any Maven module). "0 0" when it did not run.
+runner_class_results() {
+  local class_name="$1" file counts tests=0 failed=0 t f
+  for file in "${REVIEW_WORKSPACE}"/app/*/target/surefire-reports/TEST-*."${class_name}".xml; do
+    [[ -f "$file" ]] || continue
+    counts="$(yq -p xml -o json '.testsuite' "$file"       | jq -r '[(.["+@tests"] // "0"), ((.["+@failures"] // "0" | tonumber) + (.["+@errors"] // "0" | tonumber))] | @tsv')"
+    IFS=$'	' read -r t f <<<"$counts"
+    tests=$(( tests + t ))
+    failed=$(( failed + f ))
+  done
+  echo "${tests} ${failed}"
 }
 
 # --- Playwright (e2e) --------------------------------------------------------

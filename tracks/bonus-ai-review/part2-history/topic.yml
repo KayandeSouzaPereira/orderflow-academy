@@ -1,0 +1,19 @@
+id: bonus2
+title: Part 2 - tests for GET /api/orders/{id}/history
+track: bonus-ai-review
+kind: api
+test_package: dev.orderflow.apitests.tracks.bonus2
+requires_stack: true
+pass_threshold: 70
+weights: { bugs: 70, practices: 30 }
+bug_bank: { min: 4, max: 4 }
+practices:
+  - black-box-only
+  - no-thread-sleep
+  - no-disabled-tests
+  - every-test-asserts
+  - no-hardcoded-endpoints
+  - naming-convention
+  - random-order-stable
+  - no-empty-catch
+timeouts: { test_run_seconds: 300 }

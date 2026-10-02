@@ -54,5 +54,9 @@ class OrderFlowSmokeTest {
         given().get("/api/products/{id}", productId)
                 .then().statusCode(200)
                 .body("stock", equalTo(3));
+
+        given().get("/api/orders/{id}/history", orderId)
+                .then().statusCode(200)
+                .body("status", org.hamcrest.Matchers.contains("PENDING", "CONFIRMED"));
     }
 }

@@ -1,0 +1,6 @@
+id: BUG-05
+title: "Creating an order answers 200 instead of 201"
+hint: "A range of status codes is not a status code."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/api/OrderResource.java

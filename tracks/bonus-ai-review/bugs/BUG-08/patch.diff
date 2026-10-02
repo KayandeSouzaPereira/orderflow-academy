@@ -1,0 +1,12 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+index ecd1891..50eb6c6 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+@@ -67,7 +67,6 @@ public class CreateOrderUseCase {
+             throw e;
+         }
+ 
+-        events.publish(new OrderCreated(order.id(), order.totalInCents(), order.createdAt()));
+         return order;
+     }
+ 

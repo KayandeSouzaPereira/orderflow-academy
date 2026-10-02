@@ -1,0 +1,6 @@
+id: BUG-03
+title: "An unknown order answers 200 with an empty list instead of 404"
+hint: "What should the API say about an order that does not exist?"
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/OrderQueries.java

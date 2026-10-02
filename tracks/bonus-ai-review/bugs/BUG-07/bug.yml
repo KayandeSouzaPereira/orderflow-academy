@@ -1,0 +1,6 @@
+id: BUG-07
+title: "A cancelled order is confirmed by the processor afterwards"
+hint: "Think about orders the processor should not touch, and about what happens after the response."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/ProcessOrderCreatedUseCase.java

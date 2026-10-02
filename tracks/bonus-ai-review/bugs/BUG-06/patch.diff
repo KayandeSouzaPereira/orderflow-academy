@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java b/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java
+index ea682d4..d647816 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java
+@@ -17,7 +17,7 @@ public class OrderValidator {
+     }
+ 
+     public void validate(String customerEmail, List<RequestedItem> items) {
+-        if (customerEmail == null || !EMAIL.matcher(customerEmail).matches()) {
++        if (customerEmail == null || !customerEmail.contains("@")) {
+             throw invalid("customerEmail must be a valid e-mail address.");
+         }
+         if (items == null || items.isEmpty()) {

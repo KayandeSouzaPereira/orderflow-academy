@@ -1,0 +1,6 @@
+id: BUG-03
+title: "OrderCreated is published even when saving the order fails"
+hint: "A test that expects a failure still has to check what the failure leaves behind."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

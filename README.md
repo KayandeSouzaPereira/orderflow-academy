@@ -18,7 +18,8 @@ tests from 0 to 100.
 | 4 | Fundamentals (`00-fundamentals`) and track A (`a-unit-testing`) | done |
 | 5 | Track B (`b-integration-testing`) and track C (`c-e2e-testing`) | done |
 | 6 | Participant CI (`review.yml`), rulesets, CODEOWNERS | done |
-| 7–8 | Bonus challenge, pilot | next |
+| 7 | Bonus challenge (`bonus-ai-review`), part 2 and the `/history` endpoint | done |
+| 8 | Pilot ([docs/PILOT.md](docs/PILOT.md)) | next (maintainer) |
 
 ## What is inside
 

@@ -1,0 +1,6 @@
+id: BUG-08
+title: "OrderCreated is never published, so orders are never confirmed"
+hint: "Does the order ever reach its final status? Wait for it, and wait the right way."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

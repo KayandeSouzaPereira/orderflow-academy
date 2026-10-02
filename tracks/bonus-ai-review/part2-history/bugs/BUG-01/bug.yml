@@ -1,0 +1,6 @@
+id: BUG-01
+title: "The history of a confirmed order has no entry for its final status"
+hint: "Compare the whole list with what the order went through, not only that a list came back."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java

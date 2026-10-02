@@ -6,6 +6,7 @@ import dev.orderflow.application.port.PresignedUrl;
 import dev.orderflow.domain.DomainException;
 import dev.orderflow.domain.ErrorCode;
 import dev.orderflow.domain.Order;
+import dev.orderflow.domain.OrderHistory;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class OrderQueries {
 
     private final OrderRepository orders;
     private final InvoiceStorage invoiceStorage;
+    private final OrderHistory orderHistory = new OrderHistory();
 
     public OrderQueries(OrderRepository orders, InvoiceStorage invoiceStorage) {
         this.orders = orders;
@@ -28,6 +30,11 @@ public class OrderQueries {
 
     public List<Order> listByCustomer(String customerEmail) {
         return orders.findByCustomerEmail(customerEmail);
+    }
+
+    /** Status history of an order, oldest first. */
+    public List<OrderHistory.Entry> history(String orderId) {
+        return orderHistory.of(get(orderId));
     }
 
     public PresignedUrl invoiceUrl(String orderId) {

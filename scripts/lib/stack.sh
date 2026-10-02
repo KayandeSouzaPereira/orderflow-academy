@@ -19,6 +19,8 @@ STACK_BACKEND_PORT="${REVIEW_BACKEND_PORT:-18080}"
 STACK_FRONTEND_PORT="${REVIEW_FRONTEND_PORT:-14200}"
 STACK_PROCESSOR_DELAY_MS=3000
 STACK_LOG=""
+# Docker Desktop errors worth a retry (a dropped connection, not a build error).
+STACK_TRANSIENT_ERRORS='error during connect|error reading from server|Unavailable|connection refused|TLS handshake timeout|i/o timeout|unexpected EOF|failed to receive status'
 
 stack__compose() {
   FLOCI_PORT="$STACK_FLOCI_PORT" \
@@ -32,13 +34,17 @@ stack__compose() {
 # Docker Desktop sometimes drops an API call ("error during connect ... EOF");
 # one retry absorbs that without hiding real failures.
 stack__up_with_retry() {
-  local attempt
-  for attempt in 1 2; do
+  local attempt marker
+  for attempt in 1 2 3 4; do
+    marker="$(wc -c <"$STACK_LOG")"
     if run_with_timeout "${STACK_TIMEOUT:-900}" stack__compose up -d --build --wait >>"$STACK_LOG" 2>&1; then
       return 0
     fi
-    grep -q 'error during connect' "$STACK_LOG" || return 1
-    (( attempt == 1 )) && score_progress "Docker dropped a request; retrying once"
+    # Only this attempt's output counts: an old error must not hide a new one.
+    tail -c +"$(( marker + 1 ))" "$STACK_LOG" | grep -qE "$STACK_TRANSIENT_ERRORS" || return 1
+    (( attempt == 4 )) && return 1
+    score_progress "Docker dropped a request; retrying (${attempt}/3)"
+    sleep $(( attempt * 8 ))
   done
   return 1
 }
@@ -69,8 +75,20 @@ stack_rebuild() {
     *) score_fatal "unknown bug side '${side}'" "bug.yml 'side' must be backend or frontend." ;;
   esac
   score_progress "rebuilding ${side}"
-  run_with_timeout "${STACK_TIMEOUT:-900}" \
-    stack__compose up -d --build --wait --no-deps "$side" >>"$STACK_LOG" 2>&1 || return 1
+  # Several builds at once can make Docker Desktop drop a connection
+  # ("error reading from server: EOF", registry lookups refused): retry those,
+  # and only those, a few times. A real compile error fails at once.
+  local attempt marker
+  for attempt in 1 2 3 4; do
+    marker="$(wc -c <"$STACK_LOG")"
+    if run_with_timeout "${STACK_TIMEOUT:-900}" \
+      stack__compose up -d --build --wait --no-deps "$side" >>"$STACK_LOG" 2>&1; then
+      break
+    fi
+    tail -c +"$(( marker + 1 ))" "$STACK_LOG" | grep -qE "$STACK_TRANSIENT_ERRORS" || return 1
+    (( attempt == 4 )) && return 1
+    sleep $(( attempt * 8 ))
+  done
   if [[ "$side" == "backend" ]]; then
     # nginx resolves the backend address at start-up: restart it too.
     stack__compose restart frontend >>"$STACK_LOG" 2>&1 || return 1

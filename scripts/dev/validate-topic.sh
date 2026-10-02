@@ -109,7 +109,20 @@ if WEAK="$(find_solution calibration-weak)"; then
   run_review "weak calibration solution" --overlay "$WEAK"
   if [[ -f "$RESULT_FILE" ]]; then
     read -r score threshold < <(jq -r '[.score, .threshold] | @tsv' "$RESULT_FILE")
-    if (( score < threshold )); then ok "weak calibration scores ${score} (< ${threshold})"; else fail "weak calibration scores ${score}, should be below ${threshold}"; fi
+    # topic.yml may fix the expected range (the bonus: base score 20 to 35).
+    range_min="$(yq -r '.calibration.min // ""' "${ROOT}/tracks/${TOPIC}/topic.yml")"
+    range_max="$(yq -r '.calibration.max // ""' "${ROOT}/tracks/${TOPIC}/topic.yml")"
+    if [[ -n "$range_min" && -n "$range_max" ]]; then
+      if (( score >= range_min && score <= range_max )); then
+        ok "calibration scores ${score} (expected ${range_min} to ${range_max})"
+      else
+        fail "calibration scores ${score}, expected ${range_min} to ${range_max}"
+      fi
+    elif (( score < threshold )); then
+      ok "weak calibration scores ${score} (< ${threshold})"
+    else
+      fail "weak calibration scores ${score}, should be below ${threshold}"
+    fi
   else
     fail "weak calibration: review did not run (exit ${LAST_EXIT})"
   fi

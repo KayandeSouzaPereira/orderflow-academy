@@ -21,7 +21,7 @@ for tool in git jq yq; do
 done
 
 README_SECTIONS=("Goal" "Context" "Your task" "How you are scored" "Hints" "Further reading")
-KINDS=" backend frontend api e2e custom "
+KINDS=" backend frontend api e2e multi custom "
 SIDES=" backend frontend "
 ERRORS=()
 
@@ -63,8 +63,24 @@ validate_topic_yml() {
   kind="$(jq -r '.kind // empty' <<<"$json")"
   [[ "$KINDS" == *" ${kind} "* ]] || error "$topic" "topic.yml kind '${kind}' is not one of:${KINDS}"
   if [[ "$kind" != "custom" ]]; then
-    [[ -n "$(jq -r '.test_package // .test_files // .test_dir // empty' <<<"$json")" ]] \
-      || error "$topic" "topic.yml needs test_package, test_files or test_dir"
+    [[ -n "$(jq -r '.test_package // .test_files // .test_dir // .suites // empty' <<<"$json")" ]] \
+      || error "$topic" "topic.yml needs test_package, test_files, test_dir or suites"
+  fi
+
+  # original-tests-kept: the list must match the starter tests (bonus challenge).
+  local list expected
+  list="$(jq -r '(.practices // [])[] | select(type == "object" and .rule == "original-tests-kept") | .list' <<<"$json")"
+  if [[ -n "$list" ]]; then
+    if [[ ! -f "${ROOT}/tracks/${topic}/${list}" ]]; then
+      error "$topic" "original-tests-kept list ${list} not found"
+    else
+      shopt -s nullglob
+      expected="$(practice_list_tests "${ROOT}/tracks/${topic}"/starter/unit/*.java "${ROOT}/tracks/${topic}"/starter/api/*.java)"
+      shopt -u nullglob
+      if [[ "$expected" != "$(grep -v '^#' "${ROOT}/tracks/${topic}/${list}" | grep -v '^$' || true)" ]]; then
+        error "$topic" "${list} does not match the starter tests (regenerate with ./scripts/dev/list-tests.sh ${topic})"
+      fi
+    fi
   fi
   while IFS= read -r rule; do
     [[ -z "$rule" ]] && continue

@@ -1,0 +1,21 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/ProcessOrderCreatedUseCase.java b/app/backend/src/main/java/dev/orderflow/application/ProcessOrderCreatedUseCase.java
+index 0bfd725..01fff9c 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/ProcessOrderCreatedUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/ProcessOrderCreatedUseCase.java
+@@ -51,15 +51,12 @@ public class ProcessOrderCreatedUseCase {
+             return Outcome.SKIPPED_ORDER_NOT_FOUND;
+         }
+         Order order = found.get();
+-        if (!stateMachine.canTransition(order.status(), OrderStatus.CONFIRMED)) {
+-            return Outcome.SKIPPED_NOT_PENDING;
+-        }
+ 
+         String key = invoiceKey(order.id());
+         invoiceStorage.store(key, invoiceGenerator.generate(order));
+ 
+         Order confirmed = order.confirmedWithInvoice(key, clock.instant());
+-        if (!orders.replaceIfStatus(confirmed, OrderStatus.PENDING)) {
++        if (!orders.replaceIfStatus(confirmed, order.status())) {
+             // Cancelled while the invoice was being generated.
+             return Outcome.SKIPPED_NOT_PENDING;
+         }

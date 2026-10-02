@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/OrderQueries.java b/app/backend/src/main/java/dev/orderflow/application/OrderQueries.java
+index be9a44e..5aec266 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/OrderQueries.java
++++ b/app/backend/src/main/java/dev/orderflow/application/OrderQueries.java
+@@ -34,7 +34,7 @@ public class OrderQueries {
+ 
+     /** Status history of an order, oldest first. */
+     public List<OrderHistory.Entry> history(String orderId) {
+-        return orderHistory.of(get(orderId));
++        return orders.findById(orderId).map(orderHistory::of).orElse(List.of());
+     }
+ 
+     public PresignedUrl invoiceUrl(String orderId) {

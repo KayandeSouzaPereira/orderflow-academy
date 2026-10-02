@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java b/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java
+index 0604f30..77cd208 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderHistory.java
+@@ -17,7 +17,7 @@ public class OrderHistory {
+ 
+     public List<Entry> of(Order order) {
+         List<Entry> entries = new ArrayList<>();
+-        entries.add(new Entry(OrderStatus.PENDING, order.createdAt()));
++        entries.add(new Entry(OrderStatus.PENDING, order.updatedAt()));
+         if (order.status() != OrderStatus.PENDING) {
+             entries.add(new Entry(order.status(), order.updatedAt()));
+         }
