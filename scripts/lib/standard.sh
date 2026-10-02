@@ -166,7 +166,8 @@ standard__required_practices() {
 standard__require_test_files() {
   (( ${#PRACTICE_FILES[@]} > 0 )) && return 0
   local where
-  where="$(topic '.test_package // .test_dir // (.test_files // [] | join(", ")) // (.suites // [] | map(.test_package) | join(", "))')"
+  # An empty string is not "missing" for jq's //, so filter explicitly.
+  where="$(topic '[.test_package, .test_dir, (.test_files // [] | join(", ")), (.suites // [] | map(.test_package) | join(", "))] | map(select(. != null and . != "")) | first')"
   score_hint "no-tests" "Write your tests in ${where} (see the topic README)."
   score_gate false "no test files in ${where}"
 }
