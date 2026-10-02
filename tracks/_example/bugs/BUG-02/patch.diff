@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java b/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java
+index 1bcc853..18cb09f 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java
+@@ -7,7 +7,7 @@ package dev.orderflow.domain;
+ public class OrderStateMachine {
+ 
+     public boolean canTransition(OrderStatus from, OrderStatus to) {
+-        return from == OrderStatus.PENDING
++        return (from == OrderStatus.PENDING || (from == OrderStatus.CONFIRMED && to == OrderStatus.CANCELLED))
+                 && (to == OrderStatus.CONFIRMED || to == OrderStatus.CANCELLED);
+     }
+ 

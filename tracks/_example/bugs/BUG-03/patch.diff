@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java b/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java
+index 1bcc853..2734cb2 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/OrderStateMachine.java
+@@ -12,7 +12,7 @@ public class OrderStateMachine {
+     }
+ 
+     public void ensureCanTransition(OrderStatus from, OrderStatus to) {
+-        if (!canTransition(from, to)) {
++        if (!canTransition(from, to) && from == to) {
+             throw new DomainException(ErrorCode.INVALID_ORDER_TRANSITION,
+                     "Order cannot change from " + from + " to " + to + ".");
+         }

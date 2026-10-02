@@ -13,8 +13,9 @@ tests from 0 to 100.
 | Phase | Content | State |
 | --- | --- | --- |
 | 1 | App base: backend, frontend, local AWS, API test module | done |
-| 2 | Review engine (`scripts/`) | next |
-| 3–8 | Private reference repo, tracks, CI, bonus challenge, pilot | planned |
+| 2 | Review engine (`scripts/`) and example topic (`tracks/_example`) | done |
+| 3 | Private reference repo and `main-ci.yml` | next |
+| 4–8 | Tracks, participant CI, bonus challenge, pilot | planned |
 
 ## What is inside
 
@@ -32,7 +33,8 @@ app/
 - Docker (Docker Desktop on macOS/Windows; Windows via WSL2)
 - JDK 21 or newer (`JAVA_HOME` must point to it)
 - Node.js 22.22+ or 24.15+ (required by Angular 22)
-- Bash, for the review scripts (Linux, macOS or WSL)
+- Bash 5, `jq` and [`yq` v4 (mikefarah)](https://github.com/mikefarah/yq#install), for the review
+  scripts (Linux, macOS, WSL or Git Bash)
 
 No AWS account and no IDE are needed.
 
@@ -89,6 +91,35 @@ cd app/backend && ./mvnw test        # needs Docker: starts Floci with Testconta
 cd app/api-tests && ./mvnw test      # needs the full stack running
 cd app/frontend && npm test
 ```
+
+## Get your score
+
+Each topic is reviewed by a script that plants known bugs in a copy of the app
+and checks whether your tests catch them:
+
+```bash
+./scripts/review.sh _example            # try it on the example topic
+./scripts/review.sh <track>/<topic>     # e.g. a-unit-testing/01-test-anatomy
+./scripts/review.sh <track>/<topic> --quick   # faster, skips mutation testing
+./scripts/review-all.sh                 # every topic, with a summary table
+```
+
+```
+══ Review: _example ══
+   user: kayan  |  branch: participant/kayan  |  commit: 3f9a2c1
+
+[✔] Gate: 10 tests passing ....................... OK
+[✔] Bug bank ..................................... 3/3    50/50
+[✔] Mutation score (100%, target 80%) ............ 25/25
+[✔] Practices .................................... 5/5    25/25
+
+TOTAL: 100/100  PASSED (threshold 70)
+```
+
+70 points or more completes a topic. The score is feedback for you, not a
+ranking. Your local score is for quick feedback; the official one is computed
+by CI with the scripts from `main`. See [scripts/README.md](scripts/README.md)
+for how reviews work.
 
 ## Keeping your branch up to date
 
