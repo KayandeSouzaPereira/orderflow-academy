@@ -18,3 +18,4 @@ git:
     - app/e2e/tests/
     - tracks/00-fundamentals/answers.yml
     - .github/workflows/
+watch_paths: [app/api-tests/TEAM-NOTES.md, app/api-tests/docs/]

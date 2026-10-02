@@ -38,6 +38,19 @@ jobs:
       - name: Topics and bugs are well formed, every patch applies
         run: ./scripts/dev/validate-structure.sh
 
+      - name: Workflows are valid (actionlint)
+        run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
+
+      - name: Rulesets are valid JSON
+        run: jq empty .github/rulesets/*.json
+
+      - name: Topic detection lists every topic
+        run: |
+          topics="$(./scripts/ci/detect-topics.sh . "" HEAD all)"
+          echo "$topics"
+          expected="$(find tracks -name topic.yml -not -path '*/bugs/*' -not -path 'tracks/_*' | wc -l)"
+          test "$(jq length <<<"$topics")" -eq "$expected"
+
   backend:
     name: Backend build and tests
     runs-on: ubuntu-latest
@@ -176,4 +189,27 @@ jobs:
           cache-dependency-path: app/frontend/package-lock.json
 
       - name: Validate the bug bank against the reference solution
-        run: ./scripts/dev/validate-topic.sh "${{ matrix.topic }}" --solutions .private/solutions
+        env:
+          REVIEW_PLAYWRIGHT_WITH_DEPS: "1"
+          TOPIC: ${{ matrix.topic }}
+        run: ./scripts/dev/validate-topic.sh "$TOPIC" --solutions .private/solutions
+
+  # One stable name for the branch ruleset to require, whatever the matrix is.
+  ok:
+    name: main-ci ok
+    needs: [scripts, backend, frontend, stack, topics, bug-bank]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: ${RESULTS}"
+          for result in ${RESULTS}; do
+            if [[ "$result" != "success" ]]; then
+              echo "::error::At least one job did not succeed"
+              exit 1
+            fi
+          done

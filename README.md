@@ -17,8 +17,8 @@ tests from 0 to 100.
 | 3 | Private reference repo and `main-ci.yml` | done |
 | 4 | Fundamentals (`00-fundamentals`) and track A (`a-unit-testing`) | done |
 | 5 | Track B (`b-integration-testing`) and track C (`c-e2e-testing`) | done |
-| 6 | Participant CI (`review.yml`), rulesets, CODEOWNERS | next |
-| 7–8 | Bonus challenge, pilot | planned |
+| 6 | Participant CI (`review.yml`), rulesets, CODEOWNERS | done |
+| 7–8 | Bonus challenge, pilot | next |
 
 ## What is inside
 
@@ -124,8 +124,11 @@ TOTAL: 100/100  PASSED (threshold 70)
 
 70 points or more completes a topic. The score is feedback for you, not a
 ranking. Your local score is for quick feedback; the official one is computed
-by CI with the scripts from `main`. See [scripts/README.md](scripts/README.md)
-for how reviews work.
+by CI every time you push to your `participant/<you>` branch, with the scripts
+from `main`: open the **review** run in the *Actions* tab and read its Job
+Summary. Editing `scripts/`, `tracks/` or the production code changes nothing
+in the official score. See [scripts/README.md](scripts/README.md) for how
+reviews work and [docs/GITHUB-SETUP.md](docs/GITHUB-SETUP.md) for the setup.
 
 ## Keeping your branch up to date
 

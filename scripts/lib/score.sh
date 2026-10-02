@@ -102,9 +102,11 @@ score_topic_value() {
 }
 
 score__identity() {
-  SCORE_BRANCH="$(git -C "$SCORE_REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
+  # CI checks out a detached commit: it sets REVIEW_BRANCH to the real branch.
+  SCORE_BRANCH="${REVIEW_BRANCH:-$(git -C "$SCORE_REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")}"
   SCORE_COMMIT="$(git -C "$SCORE_REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo "none")"
-  if [[ -n "$(git -C "$SCORE_REPO_ROOT" status --porcelain -- app 2>/dev/null)" ]]; then
+  # Official reviews replace scripts/ and app/ on purpose: not worth a warning.
+  if [[ -z "${REVIEW_BRANCH:-}" && -n "$(git -C "$SCORE_REPO_ROOT" status --porcelain -- app 2>/dev/null)" ]]; then
     SCORE_COMMIT="${SCORE_COMMIT} (uncommitted changes)"
   fi
   if [[ "$SCORE_BRANCH" == participant/* ]]; then

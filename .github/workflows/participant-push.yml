@@ -1,0 +1,42 @@
+# Tiny workflow that runs on every push to a participant branch. It does not
+# score anything: it only records which commits were pushed, so the official
+# review (review.yml, always taken from main) knows what changed.
+#
+# A participant may edit or delete this file on their branch. That only stops
+# the automatic start of the official review for that branch; it cannot change
+# a score, because the review never runs code from the participant's branch
+# before the scoring scripts of main have replaced it.
+name: participant-push
+
+on:
+  push:
+    branches: ["participant/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    name: Record the push
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Write push information
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          mkdir push-info
+          jq -n --arg before "$BEFORE" --arg after "$AFTER" --arg branch "$BRANCH" \
+            '{before: $before, after: $after, branch: $branch}' > push-info/push.json
+          {
+            echo "### Push recorded"
+            echo
+            echo "The official review starts in the **review** workflow and uses the scripts of \`main\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: push-info
+          path: push-info
+          retention-days: 7

@@ -29,3 +29,4 @@ practices:
     min_cases: 10
     weight: 2
 timeouts: { test_run_seconds: 600 }
+watch_paths: [app/api-tests/manual-cases.md]
