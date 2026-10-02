@@ -1,0 +1,12 @@
+══ Review: a-unit-testing/03-tdd-kata ══
+   user: Kayan de Souza  |  branch: HEAD  |  commit: 038b809
+
+[✔] Gate: 18 tests passing ....................... OK
+[✔] Gate: tests also pass on the reference CouponPolicy.java ... OK
+[✔] Bug bank ..................................... 4/4    50/50
+[✔] Mutation score (100%, target 80%) ............ 25/25
+[✔] Practices .................................... 5/5    25/25
+
+TOTAL: 100/100  PASSED (threshold 70)
+
+Results written to /c/dev/test-sandbox/pilot-results/json-20261002-0657/a-unit-testing-03-tdd-kata.json

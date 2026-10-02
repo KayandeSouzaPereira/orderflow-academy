@@ -1,0 +1,43 @@
+{
+  "topic": "a-unit-testing/04-angular-unit",
+  "title": "Angular unit tests - cart and order status",
+  "user": "Kayan de Souza",
+  "branch": "HEAD",
+  "commit": "038b809",
+  "score": 97,
+  "max": 100,
+  "threshold": 70,
+  "status": "passed",
+  "passed": true,
+  "partial": false,
+  "gate": {
+    "passed": true,
+    "detail": "18 tests passing"
+  },
+  "criteria": [
+    {
+      "name": "Bug bank",
+      "earned": 50,
+      "max": 50,
+      "detail": "5/5",
+      "ok": true
+    },
+    {
+      "name": "Mutation score (70%, target 80%)",
+      "earned": 22,
+      "max": 25,
+      "detail": "",
+      "ok": false
+    },
+    {
+      "name": "Practices",
+      "earned": 25,
+      "max": 25,
+      "detail": "3/3",
+      "ok": true
+    }
+  ],
+  "missedBugs": [],
+  "practiceHints": [],
+  "warnings": []
+}

@@ -43,6 +43,6 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Mutation testing
+# Mutation testing reports
 reports/
 .stryker-tmp/

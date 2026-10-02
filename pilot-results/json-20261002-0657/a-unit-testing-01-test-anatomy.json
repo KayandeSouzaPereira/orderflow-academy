@@ -1,0 +1,43 @@
+{
+  "topic": "a-unit-testing/01-test-anatomy",
+  "title": "Test anatomy - pricing rules",
+  "user": "Kayan de Souza",
+  "branch": "HEAD",
+  "commit": "038b809",
+  "score": 100,
+  "max": 100,
+  "threshold": 70,
+  "status": "passed",
+  "passed": true,
+  "partial": false,
+  "gate": {
+    "passed": true,
+    "detail": "16 tests passing"
+  },
+  "criteria": [
+    {
+      "name": "Bug bank",
+      "earned": 50,
+      "max": 50,
+      "detail": "5/5",
+      "ok": true
+    },
+    {
+      "name": "Mutation score (100%, target 80%)",
+      "earned": 25,
+      "max": 25,
+      "detail": "",
+      "ok": true
+    },
+    {
+      "name": "Practices",
+      "earned": 25,
+      "max": 25,
+      "detail": "6/6",
+      "ok": true
+    }
+  ],
+  "missedBugs": [],
+  "practiceHints": [],
+  "warnings": []
+}

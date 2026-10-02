@@ -1,0 +1,43 @@
+{
+  "topic": "a-unit-testing/03-tdd-kata",
+  "title": "TDD kata - coupon policy",
+  "user": "Kayan de Souza",
+  "branch": "HEAD",
+  "commit": "038b809",
+  "score": 100,
+  "max": 100,
+  "threshold": 70,
+  "status": "passed",
+  "passed": true,
+  "partial": false,
+  "gate": {
+    "passed": true,
+    "detail": "tests also pass on the reference CouponPolicy.java"
+  },
+  "criteria": [
+    {
+      "name": "Bug bank",
+      "earned": 50,
+      "max": 50,
+      "detail": "4/4",
+      "ok": true
+    },
+    {
+      "name": "Mutation score (100%, target 80%)",
+      "earned": 25,
+      "max": 25,
+      "detail": "",
+      "ok": true
+    },
+    {
+      "name": "Practices",
+      "earned": 25,
+      "max": 25,
+      "detail": "5/5",
+      "ok": true
+    }
+  ],
+  "missedBugs": [],
+  "practiceHints": [],
+  "warnings": []
+}

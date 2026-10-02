@@ -1,0 +1,9 @@
+══ Review: c-e2e-testing/05-e2e-in-ci ══
+   user: Kayan de Souza  |  branch: HEAD  |  commit: 038b809
+
+[✔] Gate: e2e-test.yml found ..................... OK
+[✔] Workflow checks .............................. 6/6    100/100
+
+TOTAL: 100/100  PASSED (threshold 70)
+
+Results written to /c/dev/test-sandbox/pilot-results/json-20261002-0657/c-e2e-testing-05-e2e-in-ci.json
