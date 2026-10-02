@@ -1,0 +1,12 @@
+diff --git a/app/frontend/src/app/orders/order-status.component.ts b/app/frontend/src/app/orders/order-status.component.ts
+index cb9e8b6..40161ce 100644
+--- a/app/frontend/src/app/orders/order-status.component.ts
++++ b/app/frontend/src/app/orders/order-status.component.ts
+@@ -65,7 +65,6 @@ export class OrderStatusComponent {
+         this.cancelling.set(false);
+         if (isOrder(order)) {
+           this.stopPolling();
+-          this.order.set(order);
+         }
+       },
+       error: (err: unknown) => {

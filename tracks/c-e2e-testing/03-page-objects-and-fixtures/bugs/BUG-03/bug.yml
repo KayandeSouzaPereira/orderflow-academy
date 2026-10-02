@@ -1,0 +1,6 @@
+id: BUG-03
+title: "An invalid e-mail is accepted by the checkout form"
+hint: "Type a wrong e-mail and check what the form allows."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart-page.ts

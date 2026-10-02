@@ -21,6 +21,11 @@
 #   SCORE_QUIET_PROGRESS  set to 1 to hide progress messages on stderr
 # -----------------------------------------------------------------------------
 
+# Loaded once per process: scripts/review.sh sources it and then sources the
+# topic review, which sources it again.
+[[ -n "${SCORE_SH_LOADED:-}" ]] && return 0
+SCORE_SH_LOADED=1
+
 readonly SCORE_COLUMN=50
 readonly SCORE_EXIT_PASSED=0
 readonly SCORE_EXIT_FAILED=1

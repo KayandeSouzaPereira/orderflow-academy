@@ -1,0 +1,19 @@
+id: c03
+title: Page objects and fixtures
+track: c-e2e-testing
+kind: e2e
+test_dir: tests/tracks/c03      # relative to app/e2e
+requires_stack: true
+pass_threshold: 70
+weights: { bugs: 70, practices: 30 }
+bug_bank: { min: 4, max: 4 }
+practices:
+  - no-test-only
+  - every-test-asserts
+  - accessible-locators
+  - no-hardcoded-base-url
+  - no-wait-for-timeout
+  - stable-without-retries
+  - { rule: page-objects, required: true }
+  - { rule: api-data-setup, required: true }
+timeouts: { test_run_seconds: 300 }

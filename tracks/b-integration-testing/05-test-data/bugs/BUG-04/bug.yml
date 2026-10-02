@@ -1,0 +1,6 @@
+id: BUG-04
+title: "Two lines of the same product take twice the stock"
+hint: "Order the same product in two separate lines and check the stock."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

@@ -1,0 +1,31 @@
+id: b09
+title: From manual cases to automated tests
+track: b-integration-testing
+kind: api
+test_package: dev.orderflow.apitests.tracks.b09
+requires_stack: true
+pass_threshold: 70
+weights: { bugs: 70, practices: 30 }
+# No bugs of its own: the bank is the union of B-03 to B-07 (20 bugs).
+bug_bank: { min: 0, max: 0 }
+# Three stacks check the 20 bugs in parallel (about 7 bugs each).
+parallel_stacks: 3
+bug_sources:
+  - b-integration-testing/03-api-test-setup
+  - b-integration-testing/04-api-testing
+  - b-integration-testing/05-test-data
+  - b-integration-testing/06-async-side-effects
+  - b-integration-testing/07-lifecycle-and-concurrency
+practices:
+  - black-box-only
+  - no-thread-sleep
+  - no-disabled-tests
+  - every-test-asserts
+  - no-hardcoded-endpoints
+  - naming-convention
+  - random-order-stable
+  - rule: traceability
+    cases_file: app/api-tests/manual-cases.md
+    min_cases: 10
+    weight: 2
+timeouts: { test_run_seconds: 600 }

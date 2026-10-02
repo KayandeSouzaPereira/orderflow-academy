@@ -1,0 +1,6 @@
+id: BUG-01
+title: "OrderCreated is never published, so orders never get confirmed"
+hint: "Follow the order until the end of its lifecycle, not just the POST response."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

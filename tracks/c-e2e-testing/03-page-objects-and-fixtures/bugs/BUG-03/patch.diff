@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/cart/cart-page.ts b/app/frontend/src/app/cart/cart-page.ts
+index e14cb98..a129a8c 100644
+--- a/app/frontend/src/app/cart/cart-page.ts
++++ b/app/frontend/src/app/cart/cart-page.ts
+@@ -22,7 +22,7 @@ export class CartPage {
+ 
+   protected readonly email = new FormControl('', {
+     nonNullable: true,
+-    validators: [Validators.required, Validators.email],
++    validators: [Validators.required],
+   });
+   protected readonly checkoutForm = new FormGroup({ email: this.email });
+   protected readonly submitting = signal(false);

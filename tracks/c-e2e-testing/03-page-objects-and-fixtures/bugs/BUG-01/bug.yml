@@ -1,0 +1,6 @@
+id: BUG-01
+title: "No message is shown when an order is refused for lack of stock"
+hint: "Prepare a product whose stock is lower than what the customer orders."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart-page.ts

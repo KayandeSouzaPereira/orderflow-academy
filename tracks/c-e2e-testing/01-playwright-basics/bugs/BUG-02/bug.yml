@@ -1,0 +1,6 @@
+id: BUG-02
+title: "Product images are broken"
+hint: "An image element can be present and still not load: check that it really shows."
+side: frontend
+files:
+  - app/frontend/src/app/catalog/catalog-page.ts

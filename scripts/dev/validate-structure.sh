@@ -63,13 +63,19 @@ validate_topic_yml() {
   kind="$(jq -r '.kind // empty' <<<"$json")"
   [[ "$KINDS" == *" ${kind} "* ]] || error "$topic" "topic.yml kind '${kind}' is not one of:${KINDS}"
   if [[ "$kind" != "custom" ]]; then
-    [[ -n "$(jq -r '.test_package // .test_files // empty' <<<"$json")" ]] \
-      || error "$topic" "topic.yml needs test_package (or test_files)"
+    [[ -n "$(jq -r '.test_package // .test_files // .test_dir // empty' <<<"$json")" ]] \
+      || error "$topic" "topic.yml needs test_package, test_files or test_dir"
   fi
   while IFS= read -r rule; do
     [[ -z "$rule" ]] && continue
     practice_known "$rule" || error "$topic" "unknown practice rule '${rule}'"
   done < <(jq -r '(.practices // [])[] | if type == "string" then . else .rule end' <<<"$json")
+
+  local source
+  while IFS= read -r source; do
+    [[ -z "$source" ]] && continue
+    [[ -f "${ROOT}/tracks/${source}/topic.yml" ]] || error "$topic" "bug source '${source}' is not a topic"
+  done < <(jq -r '(.bug_sources // [])[]' <<<"$json")
 
   local weight_mutation
   weight_mutation="$(jq -r '.weights.mutation // empty' <<<"$json")"

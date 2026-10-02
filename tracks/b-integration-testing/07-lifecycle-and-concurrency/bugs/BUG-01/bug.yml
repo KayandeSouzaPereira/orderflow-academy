@@ -1,0 +1,6 @@
+id: BUG-01
+title: "A cancelled order is confirmed by the processor afterwards"
+hint: "Cancel while the order is still PENDING, then wait longer than the processor delay."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/ProcessOrderCreatedUseCase.java

@@ -1,0 +1,6 @@
+id: BUG-03
+title: "Two simultaneous orders can sell the same last unit"
+hint: "Send several orders for the last unit at the same time and count the successes."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java

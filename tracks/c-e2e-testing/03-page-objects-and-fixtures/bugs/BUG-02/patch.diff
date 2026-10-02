@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/orders/order-status.component.html b/app/frontend/src/app/orders/order-status.component.html
+index 64912b7..d4ac16c 100644
+--- a/app/frontend/src/app/orders/order-status.component.html
++++ b/app/frontend/src/app/orders/order-status.component.html
+@@ -40,7 +40,7 @@
+   </table>
+ 
+   <div class="actions">
+-    @if (order.status === 'PENDING') {
++    @if (order.status !== 'CANCELLED') {
+       <p class="hint">Waiting for confirmation…</p>
+       <button type="button" class="danger" [disabled]="cancelling()" (click)="cancel()">Cancel order</button>
+     }

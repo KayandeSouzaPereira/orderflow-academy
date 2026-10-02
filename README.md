@@ -16,8 +16,9 @@ tests from 0 to 100.
 | 2 | Review engine (`scripts/`) and example topic (`tracks/_example`) | done |
 | 3 | Private reference repo and `main-ci.yml` | done |
 | 4 | Fundamentals (`00-fundamentals`) and track A (`a-unit-testing`) | done |
-| 5 | Tracks B and C | next |
-| 6–8 | Participant CI, bonus challenge, pilot | planned |
+| 5 | Track B (`b-integration-testing`) and track C (`c-e2e-testing`) | done |
+| 6 | Participant CI (`review.yml`), rulesets, CODEOWNERS | next |
+| 7–8 | Bonus challenge, pilot | planned |
 
 ## What is inside
 
@@ -27,7 +28,9 @@ app/
 ├── aws-init/            # creates tables, queue, bucket; seeds 10 products with images
 ├── backend/             # Quarkus (Java 21) - white-box tests of track A live here
 ├── api-tests/           # black-box API tests of track B (no dependency on the backend)
-└── frontend/            # Angular - unit tests of topic A-04 live next to the components
+├── exercises/           # Java exercises of topic B-01
+├── frontend/            # Angular - unit tests of topic A-04 live next to the components
+└── e2e/                 # Playwright end-to-end tests of track C
 ```
 
 ## Requirements
@@ -92,6 +95,7 @@ Configuration (environment variables):
 cd app/backend && ./mvnw test        # needs Docker: starts Floci with Testcontainers
 cd app/api-tests && ./mvnw test      # needs the full stack running
 cd app/frontend && npm test
+cd app/e2e && npm ci && npx playwright install chromium && E2E_BASE_URL=http://localhost:4200 npx playwright test tests/smoke
 ```
 
 ## Get your score

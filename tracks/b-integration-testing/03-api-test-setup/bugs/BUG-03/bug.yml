@@ -1,0 +1,6 @@
+id: BUG-03
+title: "A single product is served with the wrong Content-Type"
+hint: "A client relies on headers too: check the Content-Type of every endpoint you call."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/api/ProductResource.java

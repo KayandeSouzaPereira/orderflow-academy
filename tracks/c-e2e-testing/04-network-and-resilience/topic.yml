@@ -1,0 +1,19 @@
+id: c04
+title: Network and resilience
+track: c-e2e-testing
+kind: e2e
+test_dir: tests/tracks/c04      # relative to app/e2e
+requires_stack: true
+pass_threshold: 70
+weights: { bugs: 70, practices: 30 }
+bug_bank: { min: 4, max: 4 }
+practices:
+  - no-test-only
+  - every-test-asserts
+  - accessible-locators
+  - no-hardcoded-base-url
+  - no-wait-for-timeout
+  - stable-without-retries
+  - page-objects
+  - api-data-setup
+timeouts: { test_run_seconds: 300 }

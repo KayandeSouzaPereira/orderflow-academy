@@ -20,7 +20,8 @@ PRACTICE_RULE_JSON='{}'
 # (reference or calibration solutions have no history of their own).
 PRACTICE_HISTORY_RULES=" tdd-history "
 # EREs below avoid backslashes ([(] instead of \(): awk -v would eat them.
-PRACTICE_ASSERTIONS='assertThat|assert[A-Z][A-Za-z]*[[:space:]]*[(]|verify[A-Za-z]*[[:space:]]*[(]|[.]statusCode[[:space:]]*[(]|[.]body[[:space:]]*[(]|expect[[:space:]]*[(]'
+# Helpers named assert*/await*/expect*/verify* (e.g. awaitConfirmed, expectStatus) count too.
+PRACTICE_ASSERTIONS='assertThat|assert[A-Z][A-Za-z]*[[:space:]]*[(]|await[A-Z][A-Za-z]*[[:space:]]*[(]|expect[A-Z][A-Za-z]*[[:space:]]*[(]|verify[A-Za-z]*[[:space:]]*[(]|[.]statusCode[[:space:]]*[(]|[.]body[[:space:]]*[(]|expect[[:space:]]*[(]|expect[.](poll|soft)[[:space:]]*[(]'
 PRACTICE_SEEDS=(20261001 4242)
 
 practice_title() {
@@ -36,6 +37,14 @@ practice_title() {
     no-quarkus-test) echo "Unit tests do not start Quarkus" ;;
     starter-fixed) echo "The starter tests were fixed" ;;
     tdd-history) echo "Tests come before or with the code (Git history)" ;;
+    traceability) echo "Every manual case has an automated test" ;;
+    no-wait-for-timeout) echo "No fixed waits (waitForTimeout)" ;;
+    no-test-only) echo "No test.only, test.skip or test.fixme" ;;
+    accessible-locators) echo "Locators by role, label or text" ;;
+    no-hardcoded-base-url) echo "Navigation relative to baseURL" ;;
+    page-objects) echo "Specs use page objects" ;;
+    api-data-setup) echo "Test data prepared through the API" ;;
+    stable-without-retries) echo "Passes twice more without retries" ;;
     *) echo "$1" ;;
   esac
 }
@@ -44,7 +53,7 @@ practice_hint() {
   case "$1" in
     no-thread-sleep) echo "Wait for a condition, not for time: await().atMost(...).untilAsserted(...) (Awaitility)." ;;
     no-disabled-tests) echo "Remove @Disabled/@Ignore: a skipped test protects nothing. Fix it or delete it." ;;
-    every-test-asserts) echo "A test without an assertion only checks that nothing throws. Assert the result you expect." ;;
+    every-test-asserts) echo "A test without an assertion only checks that nothing throws. Assert the result you expect (helpers named assert*/expect*/await* count)." ;;
     no-hardcoded-endpoints) echo "Read hosts and ports from configuration (TestApi, @ConfigProperty, injected clients), never from literals." ;;
     naming-convention) echo "Rename tests to should<Result>When<Condition>, e.g. shouldReturn409WhenStockIsInsufficient." ;;
     random-order-stable) echo "A test relies on state left by another one. Give each test its own data and no shared mutable fields." ;;
@@ -53,6 +62,14 @@ practice_hint() {
     no-quarkus-test) echo "Build the class under test with 'new' and Mockito mocks; @QuarkusTest belongs to integration tests." ;;
     starter-fixed) echo "Copy the starter test into your package and fix all three problems: missing assertion, two behaviours in one test, generic name." ;;
     tdd-history) echo "Commit a failing test first (or together with the code), then the code that makes it pass. Small commits make this visible." ;;
+    traceability) echo "Give every manual case a heading with its id (## MC-01 ...) and tag at least one test with @Tag(\"MC-01\")." ;;
+    no-wait-for-timeout) echo "Wait for what you expect to see: await expect(locator).toHaveText(...) or expect.poll(...) retry until it holds." ;;
+    no-test-only) echo "Remove .only/.skip/.fixme before you push: they hide tests from the run." ;;
+    accessible-locators) echo "Use page.getByRole/getByLabel/getByText; CSS or XPath only for [data-testid] when nothing accessible exists." ;;
+    no-hardcoded-base-url) echo "Navigate with relative paths (page.goto('/cart')) and read the API URL from support/environment.ts." ;;
+    page-objects) echo "Move page.getBy*/page.locator calls into page objects; specs should read like a user story." ;;
+    api-data-setup) echo "Create products and orders in a fixture with request.post(...) to the API, not through the UI." ;;
+    stable-without-retries) echo "A test passed once and failed later: wait on assertions, use your own data, avoid timing assumptions." ;;
     *) echo "See the topic README." ;;
   esac
 }
@@ -305,6 +322,109 @@ practice_tdd_history() {
   (( percent >= min_percent )) && return 0
   PRACTICE_DETAIL="${ok_commits} of ${impl_commits} implementation commits had a test first (${percent}%, need ${min_percent}%)"
   return 1
+}
+
+# Parameters: cases_file (repo-relative Markdown file with one heading per
+# manual case, e.g. "## MC-01 Order with an invalid e-mail"), min_cases.
+# Every case id must appear in at least one @Tag("MC-XX") of the topic's tests.
+practice_traceability() {
+  local cases_file min_cases ids id missing=() count
+  cases_file="$(practice_param '.cases_file')"
+  min_cases="$(practice_param '.min_cases')"
+  min_cases="${min_cases:-10}"
+  if [[ ! -f "${REVIEW_WORKSPACE}/${cases_file}" ]]; then
+    PRACTICE_DETAIL="${cases_file} not found"
+    return 1
+  fi
+  ids="$(grep -oE '^#+[[:space:]]+MC-[0-9]{2}' "${REVIEW_WORKSPACE}/${cases_file}" | grep -oE 'MC-[0-9]{2}' | sort -u)"
+  count="$(grep -c . <<<"$ids" || true)"
+  for id in $ids; do
+    grep -qE "@Tag[(][[:space:]]*\"${id}\"[[:space:]]*[)]" "${PRACTICE_FILES[@]}" || missing+=("$id")
+  done
+  local problems=()
+  (( count >= min_cases )) || problems+=("${count} manual cases, expected at least ${min_cases}")
+  (( ${#missing[@]} == 0 )) || problems+=("no @Tag test for $(printf '%s ' "${missing[@]}")")
+  (( ${#problems[@]} == 0 )) && return 0
+  PRACTICE_DETAIL="$(printf '%s; ' "${problems[@]}")"
+  PRACTICE_DETAIL="${PRACTICE_DETAIL%; }"
+  return 1
+}
+
+# --- Track C (Playwright) ----------------------------------------------------
+
+practice_no_wait_for_timeout() {
+  local hits
+  hits="$(practice__grep 'waitForTimeout[[:space:]]*[(]')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+practice_no_test_only() {
+  local hits
+  hits="$(practice__grep '(test|describe)[.](only|skip|fixme)[[:space:]]*[(]')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# CSS or XPath selectors are only allowed for data-testid.
+practice_accessible_locators() {
+  local hits
+  hits="$(practice__grep '[.]locator[[:space:]]*[(][[:space:]]*[^)[:space:]]' \
+    | while IFS=: read -r name line; do
+        local file
+        for file in "${PRACTICE_FILES[@]}"; do
+          [[ "${file##*/}" == "$name" ]] || continue
+          sed -n "${line}p" "$file" | grep -qE 'locator[[:space:]]*[(][[:space:]]*.[[]data-testid' || echo "${name}:${line}"
+        done
+      done)"
+  # page.$(...) / page.$$(...) / $eval: raw CSS selectors. [$] avoids backslashes (awk -v eats them).
+  hits+="$(practice__grep '[.][$][$]?(eval)?[[:space:]]*[(]|xpath=|[(][[:space:]]*.//')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+practice_no_hardcoded_base_url() {
+  local hits
+  hits="$(practice__grep 'https?://(localhost|127[.]0[.]0[.]1)|:4200([^0-9]|$)|:8080([^0-9]|$)')"
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# Spec files talk to page objects; only page objects touch page.getBy*/locator.
+practice_page_objects() {
+  local file hits=""
+  for file in "${PRACTICE_FILES[@]}"; do
+    [[ "$file" == *.spec.ts ]] || continue
+    hits+="$(awk -v name="${file##*/}" '
+      /^[[:space:]]*(\/\/|\*|\/\*)/ { next }
+      /page[.](getBy[A-Za-z]+|locator)[[:space:]]*[(]/ { printf "%s:%d\n", name, NR }' "$file")"
+  done
+  [[ -z "$hits" ]] && return 0
+  practice__set_detail <<<"$hits"
+  return 1
+}
+
+# Test data is prepared through the API (Playwright's request fixture).
+practice_api_data_setup() {
+  [[ -n "$(practice__grep 'request[.]post[[:space:]]*[(]')" ]] && return 0
+  PRACTICE_DETAIL="no request.post(...) in the topic folder"
+  return 1
+}
+
+practice_stable_without_retries() {
+  local attempt
+  for attempt in 1 2; do
+    score_progress "running the suite again without retries (${attempt}/2)"
+    if ! runner_run; then
+      PRACTICE_DETAIL="failed on extra run ${attempt} without retries"
+      return 1
+    fi
+  done
+  return 0
 }
 
 # --- Runtime rules -----------------------------------------------------------

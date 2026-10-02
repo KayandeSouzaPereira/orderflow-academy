@@ -73,8 +73,13 @@ run_review() {
 
 printf '══ Validating %s ══\n' "$TOPIC"
 
-# 1. No tests: the gate must stop the review.
-run_review "without tests (expect gate, exit 2)"
+# 1. No tests: the gate must stop the review. Topics whose work is not files
+#    (B-02 reads Git history) provide an 'empty' solution for this case.
+if EMPTY="$(find_solution empty)"; then
+  run_review "without tests (expect gate, exit 2)" --overlay "$EMPTY"
+else
+  run_review "without tests (expect gate, exit 2)"
+fi
 if (( LAST_EXIT == 2 )); then ok "no tests: gate failed with exit 2"; else fail "no tests: expected exit 2, got ${LAST_EXIT}"; fi
 
 # 2. Reference solution: every bug detected, score >= 90, no warnings.

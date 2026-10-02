@@ -1,0 +1,6 @@
+id: BUG-02
+title: "The loading indicator never disappears after a failure"
+hint: "Check the loading state after the request ends, not only while it runs."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart-page.ts

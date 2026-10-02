@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+index ecd1891..9f59363 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+@@ -75,7 +75,7 @@ public class CreateOrderUseCase {
+     private static Map<String, Integer> quantityByProduct(List<RequestedItem> items) {
+         Map<String, Integer> result = new LinkedHashMap<>();
+         for (RequestedItem item : items) {
+-            result.merge(item.productId(), item.quantity(), Integer::sum);
++            result.merge(item.productId(), item.quantity(), (a, b) -> 2 * (a + b));
+         }
+         return result;
+     }

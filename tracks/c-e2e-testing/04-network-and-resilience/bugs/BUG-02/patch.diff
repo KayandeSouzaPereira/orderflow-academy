@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/cart/cart-page.ts b/app/frontend/src/app/cart/cart-page.ts
+index e14cb98..55d24c9 100644
+--- a/app/frontend/src/app/cart/cart-page.ts
++++ b/app/frontend/src/app/cart/cart-page.ts
+@@ -52,7 +52,7 @@ export class CartPage {
+ 
+     this.api
+       .createOrder(request)
+-      .pipe(finalize(() => this.submitting.set(false)))
++      .pipe(finalize(() => this.submitting.set(this.error() !== null)))
+       .subscribe({
+         next: (order) => {
+           if (!isOrder(order)) {

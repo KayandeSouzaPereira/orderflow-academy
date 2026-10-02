@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/api/ProductResource.java b/app/backend/src/main/java/dev/orderflow/api/ProductResource.java
+index 322ca2e..2d8606c 100644
+--- a/app/backend/src/main/java/dev/orderflow/api/ProductResource.java
++++ b/app/backend/src/main/java/dev/orderflow/api/ProductResource.java
+@@ -29,7 +29,7 @@ public class ProductResource {
+ 
+     @GET
+     public List<ProductResponse> list() {
+-        return catalog.list().stream().map(ProductResponse::from).toList();
++        return List.of();
+     }
+ 
+     @GET

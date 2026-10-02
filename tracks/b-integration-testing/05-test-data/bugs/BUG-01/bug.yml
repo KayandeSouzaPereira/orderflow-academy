@@ -1,0 +1,6 @@
+id: BUG-01
+title: "Listing orders by customer returns every customer's orders"
+hint: "Create orders for two different e-mails and list one of them."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java

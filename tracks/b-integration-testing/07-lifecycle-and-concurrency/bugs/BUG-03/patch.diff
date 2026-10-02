@@ -1,0 +1,19 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java
+index 941416e..07aafd2 100644
+--- a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java
++++ b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java
+@@ -63,6 +63,14 @@ public class DynamoProductRepository implements ProductRepository {
+ 
+     @Override
+     public boolean reserveStock(String productId, int quantity) {
++        Optional<Product> current = findById(productId);
++        if (current.isEmpty() || current.get().stock() < quantity) {
++            return false;
++        }
++        setStock(productId, current.get().stock() - quantity);
++        if (current.isPresent()) {
++            return true;
++        }
+         try {
+             dynamo.updateItem(UpdateItemRequest.builder()
+                     .tableName(table)

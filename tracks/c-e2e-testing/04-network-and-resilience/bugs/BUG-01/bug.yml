@@ -1,0 +1,6 @@
+id: BUG-01
+title: "No message is shown when the API answers 500"
+hint: "Make the order request fail with page.route and look for a message."
+side: frontend
+files:
+  - app/frontend/src/app/cart/cart-page.ts

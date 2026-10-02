@@ -1,0 +1,15 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/api/ProductResource.java b/app/backend/src/main/java/dev/orderflow/api/ProductResource.java
+index 322ca2e..e43182c 100644
+--- a/app/backend/src/main/java/dev/orderflow/api/ProductResource.java
++++ b/app/backend/src/main/java/dev/orderflow/api/ProductResource.java
+@@ -38,8 +38,8 @@ public class ProductResource {
+             content = @Content(schema = @Schema(implementation = ProductResponse.class)))
+     @APIResponse(responseCode = "404", description = "Unknown product",
+             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+-    public ProductResponse get(@PathParam("id") String id) {
+-        return ProductResponse.from(catalog.get(id));
++    public jakarta.ws.rs.core.Response get(@PathParam("id") String id) {
++        return jakarta.ws.rs.core.Response.ok(ProductResponse.from(catalog.get(id)), "application/vnd.orderflow+json").build();
+     }
+ 
+     @GET

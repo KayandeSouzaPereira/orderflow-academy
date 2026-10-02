@@ -1,0 +1,6 @@
+id: BUG-03
+title: "Error responses have no code"
+hint: "Every error must follow the documented format: check its fields, or validate it against the OpenAPI schema."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/api/error/ErrorMappers.java

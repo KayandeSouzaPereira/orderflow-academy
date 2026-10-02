@@ -1,0 +1,18 @@
+id: b06
+title: Asynchronous side effects - confirmation and invoice
+track: b-integration-testing
+kind: api
+test_package: dev.orderflow.apitests.tracks.b06
+requires_stack: true          # full stack, processor delay 3000 ms
+pass_threshold: 70
+weights: { bugs: 70, practices: 30 }
+bug_bank: { min: 4, max: 4 }  # black-box topics: each bug rebuilds the stack side it touches
+practices:
+  - black-box-only
+  - { rule: no-thread-sleep, weight: 2 }
+  - no-disabled-tests
+  - every-test-asserts
+  - no-hardcoded-endpoints
+  - naming-convention
+  - random-order-stable
+timeouts: { test_run_seconds: 300 }

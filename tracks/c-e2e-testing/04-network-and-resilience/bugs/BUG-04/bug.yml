@@ -1,0 +1,6 @@
+id: BUG-04
+title: "The order page breaks on a malformed response"
+hint: "Answer the order request with unexpected JSON and check that the page explains the problem."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.ts

@@ -1,0 +1,6 @@
+id: BUG-04
+title: "An invalid e-mail is accepted"
+hint: "Send e-mails that are clearly wrong and expect 400."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderValidator.java

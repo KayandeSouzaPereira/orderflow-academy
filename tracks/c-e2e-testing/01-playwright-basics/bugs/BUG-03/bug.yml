@@ -1,0 +1,6 @@
+id: BUG-03
+title: "A product without stock is shown as available"
+hint: "The seed has a product with no stock: look at what its card says."
+side: frontend
+files:
+  - app/frontend/src/app/catalog/catalog-page.html

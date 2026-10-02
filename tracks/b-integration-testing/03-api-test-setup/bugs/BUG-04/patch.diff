@@ -1,0 +1,12 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/api/dto/ProductResponse.java b/app/backend/src/main/java/dev/orderflow/api/dto/ProductResponse.java
+index 2443607..241c15c 100644
+--- a/app/backend/src/main/java/dev/orderflow/api/dto/ProductResponse.java
++++ b/app/backend/src/main/java/dev/orderflow/api/dto/ProductResponse.java
+@@ -6,6 +6,6 @@ public record ProductResponse(String id, String name, String description, long p
+ 
+     public static ProductResponse from(Product product) {
+         return new ProductResponse(product.id(), product.name(), product.description(),
+-                product.priceInCents(), product.stock());
++                product.priceInCents() / 100, product.stock());
+     }
+ }

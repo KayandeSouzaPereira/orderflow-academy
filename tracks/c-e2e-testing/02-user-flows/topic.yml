@@ -1,0 +1,17 @@
+id: c02
+title: User flows - from cart to confirmed order
+track: c-e2e-testing
+kind: e2e
+test_dir: tests/tracks/c02      # relative to app/e2e
+requires_stack: true
+pass_threshold: 70
+weights: { bugs: 70, practices: 30 }
+bug_bank: { min: 4, max: 4 }
+practices:
+  - no-test-only
+  - every-test-asserts
+  - accessible-locators
+  - no-hardcoded-base-url
+  - { rule: no-wait-for-timeout, weight: 2 }
+  - stable-without-retries
+timeouts: { test_run_seconds: 300 }

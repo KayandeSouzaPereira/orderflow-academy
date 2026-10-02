@@ -1,0 +1,6 @@
+id: BUG-01
+title: "Creating an order answers 200 instead of 201"
+hint: "Check the exact status code and the Location header of a creation."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/api/OrderResource.java

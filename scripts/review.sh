@@ -29,6 +29,15 @@ EOF
     | sed -e "s#^${ROOT}/tracks/##" -e 's#/topic.yml$##' | sort | sed 's/^/  /'
 }
 
+child=""
+
+# Sends TERM to the running topic review (a background subshell ignores
+# SIGINT, so Ctrl+C is forwarded as TERM).
+# shellcheck disable=SC2329 # invoked by the trap below
+forward_signal() {
+  kill -TERM "$child" 2>/dev/null || true
+}
+
 main() {
   if (( $# == 0 )) || [[ "$1" == "-h" || "$1" == "--help" ]]; then
     usage
@@ -42,7 +51,24 @@ main() {
     "Run ./scripts/review.sh --help to list the topics."
   [[ -f "${topic_dir}/review.sh" ]] || score_fatal "topic '${topic}' has no review.sh" \
     "Tell the maintainer: every topic needs tracks/<track>/<topic>/review.sh."
-  exec bash "${topic_dir}/review.sh" "$@"
+  # Run the topic review in a subshell (a fork, no 'exec') and forward Ctrl+C
+  # and TERM to it. On Windows (MSYS) every exec leaves an intermediate process
+  # that swallows signals; a forked subshell is always the real process, so the
+  # review's cleanup (containers, temporary folders) always runs.
+  (
+    # shellcheck source=/dev/null
+    source "${topic_dir}/review.sh" "$@"
+  ) &
+  child=$!
+  local status=0
+  trap forward_signal INT TERM
+  wait "$child" || status=$?
+  # After a forwarded signal, wait until the review has cleaned up.
+  while kill -0 "$child" 2>/dev/null; do
+    status=0
+    wait "$child" || status=$?
+  done
+  exit "$status"
 }
 
 main "$@"

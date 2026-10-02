@@ -1,0 +1,6 @@
+id: BUG-02
+title: "The cancel button is shown for CONFIRMED orders"
+hint: "Open an order in each status and check which actions it offers."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.html

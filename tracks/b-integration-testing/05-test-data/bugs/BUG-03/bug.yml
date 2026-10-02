@@ -1,0 +1,6 @@
+id: BUG-03
+title: "Cancelling an order does not give the stock back"
+hint: "Follow the stock of a product through order and cancellation."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CancelOrderUseCase.java
