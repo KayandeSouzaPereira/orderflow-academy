@@ -1,0 +1,22 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
+index 98d74e8..e2b4614 100644
+--- a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
++++ b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java
+@@ -99,7 +99,7 @@ public class DynamoOrderRepository implements OrderRepository {
+         item.put("id", s(order.id()));
+         item.put("customerEmail", s(order.customerEmail()));
+         item.put("items", AttributeValue.fromL(order.items().stream().map(DynamoOrderRepository::toItem).toList()));
+-        item.put("totalInCents", n(order.totalInCents()));
++        item.put("total", n(order.totalInCents()));
+         item.put("status", s(order.status().name()));
+         if (order.invoiceKey() != null) {
+             item.put("invoiceKey", s(order.invoiceKey()));
+@@ -125,7 +125,7 @@ public class DynamoOrderRepository implements OrderRepository {
+                 getS(item, "id"),
+                 getS(item, "customerEmail"),
+                 items,
+-                getN(item, "totalInCents"),
++                getN(item, "total"),
+                 OrderStatus.valueOf(getS(item, "status")),
+                 getS(item, "invoiceKey"),
+                 Instant.parse(getS(item, "createdAt")),

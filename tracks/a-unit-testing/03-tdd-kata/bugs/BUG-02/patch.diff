@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+index 27e07db..1bd6564 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+@@ -32,7 +32,7 @@ public class CouponPolicy {
+         if (today.isAfter(coupon.validUntil())) {
+             throw new CouponException(CouponException.Reason.EXPIRED, coupon.code() + " has expired.");
+         }
+-        if (totalInCents < coupon.minimumOrderInCents()) {
++        if (totalInCents <= coupon.minimumOrderInCents()) {
+             throw new CouponException(CouponException.Reason.MINIMUM_NOT_REACHED,
+                     coupon.code() + " needs an order of at least " + coupon.minimumOrderInCents() + " cents.");
+         }

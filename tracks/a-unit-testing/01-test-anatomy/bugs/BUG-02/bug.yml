@@ -1,0 +1,6 @@
+id: BUG-02
+title: "The discounted total is rounded up"
+hint: "Pick a subtotal whose 10% discount is not a whole number of cents."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java

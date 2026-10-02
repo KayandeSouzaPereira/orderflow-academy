@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java
+index 941416e..d996936 100644
+--- a/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java
++++ b/app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java
+@@ -68,7 +68,7 @@ public class DynamoProductRepository implements ProductRepository {
+                     .tableName(table)
+                     .key(key(productId))
+                     .updateExpression("SET stock = stock - :q")
+-                    .conditionExpression("attribute_exists(id) AND stock >= :q")
++                    .conditionExpression("attribute_exists(id)")
+                     .expressionAttributeValues(Map.of(":q", n(quantity)))
+                     .build());
+             return true;

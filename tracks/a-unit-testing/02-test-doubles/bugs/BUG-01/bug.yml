@@ -1,0 +1,6 @@
+id: BUG-01
+title: "Stock is never reserved when an order is created"
+hint: "Check what the use case asks the product repository to do, not only what it returns."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

@@ -1,0 +1,6 @@
+id: BUG-02
+title: "The OrderCreated message is sent without the orderId"
+hint: "Receive the message from the queue and check every field of its body."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/sqs/OrderCreatedMessage.java

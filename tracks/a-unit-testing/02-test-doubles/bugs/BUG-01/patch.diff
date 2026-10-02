@@ -1,0 +1,13 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+index ecd1891..3706140 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+@@ -94,7 +94,7 @@ public class CreateOrderUseCase {
+     private void reserveStock(Map<String, Integer> quantityByProduct) {
+         Map<String, Integer> reserved = new LinkedHashMap<>();
+         for (Map.Entry<String, Integer> entry : quantityByProduct.entrySet()) {
+-            if (!products.reserveStock(entry.getKey(), entry.getValue())) {
++            if (products.findById(entry.getKey()).isEmpty()) {
+                 releaseStock(reserved);
+                 throw new DomainException(ErrorCode.OUT_OF_STOCK,
+                         "Not enough stock for product " + entry.getKey() + ".");

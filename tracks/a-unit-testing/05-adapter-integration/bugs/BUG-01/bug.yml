@@ -1,0 +1,6 @@
+id: BUG-01
+title: "The order total is stored as 'total' instead of 'totalInCents'"
+hint: "Read the raw item from the table, not only through the repository."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java

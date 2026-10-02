@@ -1,0 +1,20 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+index ecd1891..9db8cdd 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+@@ -60,6 +60,7 @@ public class CreateOrderUseCase {
+         reserveStock(quantityByProduct);
+ 
+         Order order = buildOrder(command, productsById);
++        events.publish(new OrderCreated(order.id(), order.totalInCents(), order.createdAt()));
+         try {
+             orders.save(order);
+         } catch (RuntimeException e) {
+@@ -67,7 +68,6 @@ public class CreateOrderUseCase {
+             throw e;
+         }
+ 
+-        events.publish(new OrderCreated(order.id(), order.totalInCents(), order.createdAt()));
+         return order;
+     }
+ 

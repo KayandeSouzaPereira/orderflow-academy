@@ -1,0 +1,6 @@
+id: BUG-03
+title: "A fixed coupon larger than the total makes the total negative"
+hint: "What should a R$50 coupon do to a R$30 order?"
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java

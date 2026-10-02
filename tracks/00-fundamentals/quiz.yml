@@ -1,0 +1,102 @@
+# Fundamentals quiz. Each answer is stored as sha256("<id>:<letter>"), so the
+# review can check it without revealing it. Hints never give the answer away.
+questions:
+  - id: q01
+    question: Why should most tests in a suite be unit tests?
+    options:
+      a: They are the only tests that find real bugs.
+      b: They are fast, point to the exact cause and are cheap to keep.
+      c: They test the system the way users use it.
+      d: They do not need assertions.
+    answer_sha256: 8304cb92d5a89319ed811c77ca8850909db4432057235244a648df69dd0653dd
+    hint: Re-read what the pyramid says about speed, precision and cost at the bottom layer.
+
+  - id: q02
+    question: What does a white-box integration test of the DynamoDB order repository check?
+    options:
+      a: That the UI shows the order after it is saved.
+      b: That OrderPricing computes the right total.
+      c: That the adapter really stores and reads orders in the database, item by item.
+      d: That the REST API returns 201.
+    answer_sha256: b4e583790c6d7e5e1c6b15a2db8f341545c8845abe74bfc55ae41a2cf1efd59c
+    hint: White-box means the test knows the implementation and talks to the real infrastructure.
+
+  - id: q03
+    question: A black-box API test of POST /api/orders...
+    options:
+      a: uses only HTTP requests and responses, without looking at the database.
+      b: mocks the OrderRepository to speed things up.
+      c: reads the orders table to confirm the item was written.
+      d: imports backend classes to build the request body.
+    answer_sha256: f7afa64810b633a66befb82fc1031aa60303da7aa5db9f20bd91fb58fc910188
+    hint: Think about what a client of the API can and cannot see.
+
+  - id: q04
+    question: What is the main cost of end-to-end UI tests?
+    options:
+      a: They cannot find bugs in the backend.
+      b: They need a mock for every service.
+      c: They only run on the developer machine.
+      d: They are slow, hard to debug and the most likely to be flaky.
+    answer_sha256: 44eb61e9e1898dc664f722499ac41b71d32c08012d7ea89a7102fd51b6ec9b13
+    hint: Look at the top of the pyramid and at the definition of flaky.
+
+  - id: q05
+    question: What is a flaky test?
+    options:
+      a: A test that is always red.
+      b: A test that passes and fails without any change to the code.
+      c: A test with a long name.
+      d: A test marked as disabled.
+    answer_sha256: c486a5f0eb496c06122630d904ed1b6571282f5cf2fc6b4d49ae1364a614a0a1
+    hint: The definition is in the end-to-end paragraph.
+
+  - id: q06
+    question: In a typical pipeline, when do end-to-end UI tests run?
+    options:
+      a: Before every unit test, so failures appear first.
+      b: Only manually, never in CI.
+      c: Less often than unit tests, e.g. on main or before a release, on the critical journeys.
+      d: On every keystroke in the IDE.
+    answer_sha256: 90ef915623d3c5514fe3429d0809404eddbc8ac09d4ee96c817436f9f7f7a1fd
+    hint: Check the "Where tests run in CI" table.
+
+  - id: q07
+    question: What does a mock offer that a stub does not?
+    options:
+      a: The test can verify which calls the code under test made.
+      b: It runs against the real database.
+      c: It makes the test run in random order.
+      d: It removes the need for assertions.
+    answer_sha256: 5195f9239f65e4512952dd231249f212bcdccaa51425c2bb156fbca74fece7a2
+    hint: Both return canned answers; only one is about checking interactions.
+
+  - id: q08
+    question: A suite has 100% line coverage. What can you conclude?
+    options:
+      a: The code has no bugs.
+      b: Every behaviour is checked by an assertion.
+      c: Mutation testing is no longer useful.
+      d: Every line ran at least once during the tests, nothing more.
+    answer_sha256: aa1873ac921326baba9173db1f755e3e2f78475326095f160f1ad6d6f58a2400
+    hint: Coverage measures execution, not checking.
+
+  - id: q09
+    question: What does the mutation score measure?
+    options:
+      a: How many lines the tests executed.
+      b: The share of deliberate code changes that make at least one test fail.
+      c: How fast the suite runs.
+      d: How many tests were written per class.
+    answer_sha256: bd6c70f44e7dfa22b036f6bf0a81e13f3e60cc4068eaf7b5b2458b3166022c08
+    hint: Mutation testing changes the code on purpose; what is counted afterwards?
+
+  - id: q10
+    question: A test passes alone but fails when the whole suite runs. What is the most likely cause?
+    options:
+      a: The test has too many assertions.
+      b: The test name does not follow the convention.
+      c: The test depends on data or state left by another test.
+      d: The test uses a stub instead of a mock.
+    answer_sha256: 3f7be01351ff10058a870e19d557746c3d8ffebc116c7c32c366911992ac49a2
+    hint: See the main sources of flakiness in "Cost of maintenance".

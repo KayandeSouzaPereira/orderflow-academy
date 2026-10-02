@@ -1,0 +1,19 @@
+id: a04
+title: Angular unit tests - cart and order status
+track: a-unit-testing
+kind: frontend
+test_files:
+  - src/app/cart/cart.service.spec.ts
+  - src/app/orders/order-status.component.spec.ts
+pass_threshold: 70
+weights: { bugs: 50, mutation: 25, practices: 25 }
+mutation:
+  target_classes:
+    - src/app/cart/cart.service.ts
+    - src/app/orders/order-status.component.ts
+  target_score: 80
+practices:
+  - no-disabled-tests
+  - every-test-asserts
+  - no-hardcoded-endpoints
+timeouts: { test_run_seconds: 300 }

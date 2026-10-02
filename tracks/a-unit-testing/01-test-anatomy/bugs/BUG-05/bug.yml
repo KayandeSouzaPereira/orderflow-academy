@@ -1,0 +1,6 @@
+id: BUG-05
+title: "Negative quantities are accepted and produce a negative total"
+hint: "Rules about invalid input are behaviour too: test what must be rejected."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/OrderPricing.java

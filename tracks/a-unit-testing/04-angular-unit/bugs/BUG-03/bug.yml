@@ -1,0 +1,6 @@
+id: BUG-03
+title: "The order keeps being polled after it is CONFIRMED"
+hint: "After a final status, advance the clock and check that no request goes out."
+side: frontend
+files:
+  - app/frontend/src/app/orders/order-status.component.ts

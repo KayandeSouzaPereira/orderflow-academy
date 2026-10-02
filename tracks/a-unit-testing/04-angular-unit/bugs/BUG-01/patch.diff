@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/cart/cart.service.ts b/app/frontend/src/app/cart/cart.service.ts
+index 20ef6ea..19ddeb0 100644
+--- a/app/frontend/src/app/cart/cart.service.ts
++++ b/app/frontend/src/app/cart/cart.service.ts
+@@ -26,7 +26,7 @@ export class CartService {
+ 
+   /** Sum of quantity x unit price, before any discount the API may apply. */
+   readonly subtotalInCents = computed(() =>
+-    this.lines().reduce((sum, line) => sum + line.quantity * line.product.priceInCents, 0),
++    this.lines().reduce((sum, line) => sum + line.product.priceInCents, 0),
+   );
+ 
+   readonly isEmpty = computed(() => this.lines().length === 0);

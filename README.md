@@ -15,8 +15,9 @@ tests from 0 to 100.
 | 1 | App base: backend, frontend, local AWS, API test module | done |
 | 2 | Review engine (`scripts/`) and example topic (`tracks/_example`) | done |
 | 3 | Private reference repo and `main-ci.yml` | done |
-| 4 | Fundamentals and track A | next |
-| 5–8 | Tracks B and C, participant CI, bonus challenge, pilot | planned |
+| 4 | Fundamentals (`00-fundamentals`) and track A (`a-unit-testing`) | done |
+| 5 | Tracks B and C | next |
+| 6–8 | Participant CI, bonus challenge, pilot | planned |
 
 ## What is inside
 

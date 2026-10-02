@@ -1,0 +1,6 @@
+id: BUG-02
+title: "OrderCreated is published before the order is saved"
+hint: "Two calls can both happen and still be wrong: check their order."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java

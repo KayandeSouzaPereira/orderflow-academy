@@ -1,0 +1,6 @@
+id: BUG-06
+title: "reserveStock takes units even when the stock is too low"
+hint: "Ask for more units than there are, then read the stock from the table."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoProductRepository.java

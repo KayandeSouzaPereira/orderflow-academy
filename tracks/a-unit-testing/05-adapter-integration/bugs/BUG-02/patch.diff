@@ -1,0 +1,12 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/infrastructure/sqs/OrderCreatedMessage.java b/app/backend/src/main/java/dev/orderflow/infrastructure/sqs/OrderCreatedMessage.java
+index d19456e..9428402 100644
+--- a/app/backend/src/main/java/dev/orderflow/infrastructure/sqs/OrderCreatedMessage.java
++++ b/app/backend/src/main/java/dev/orderflow/infrastructure/sqs/OrderCreatedMessage.java
+@@ -21,7 +21,6 @@ public final class OrderCreatedMessage {
+ 
+     public static String toJson(OrderCreated event) {
+         ObjectNode node = JSON.createObjectNode();
+-        node.put("orderId", event.orderId());
+         node.put("totalInCents", event.totalInCents());
+         node.put("occurredAt", event.occurredAt().toString());
+         return node.toString();

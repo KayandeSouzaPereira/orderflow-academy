@@ -1,0 +1,6 @@
+id: BUG-01
+title: "Coupons are accepted outside their validity dates"
+hint: "Fix the clock and try the day before, the first day, the last day and the day after."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java

@@ -1,0 +1,19 @@
+id: a05
+title: Adapter integration - DynamoDB, SQS and S3 against Floci
+track: a-unit-testing
+kind: backend
+test_package: dev.orderflow.tracks.a05
+requires_stack: false
+requires_docker: true          # Floci runs in Testcontainers
+pass_threshold: 70
+# No mutation testing: PIT restarts Quarkus and Floci for every mutant
+# (see docs/DECISIONS.md), so bugs and practices carry the whole score.
+weights: { bugs: 70, mutation: 0, practices: 30 }
+practices:
+  - no-thread-sleep
+  - no-disabled-tests
+  - every-test-asserts
+  - no-hardcoded-endpoints
+  - naming-convention
+  - random-order-stable
+timeouts: { test_run_seconds: 600 }

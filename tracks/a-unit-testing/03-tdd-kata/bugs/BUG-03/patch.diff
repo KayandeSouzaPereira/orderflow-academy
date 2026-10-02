@@ -1,0 +1,12 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+index 27e07db..12a4611 100644
+--- a/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
++++ b/app/backend/src/main/java/dev/orderflow/domain/coupon/CouponPolicy.java
+@@ -53,6 +53,6 @@ public class CouponPolicy {
+         if (coupon.value() <= 0) {
+             throw new CouponException(CouponException.Reason.INVALID_COUPON, "Fixed amount must be positive.");
+         }
+-        return Math.max(0, totalInCents - coupon.value());
++        return totalInCents - coupon.value();
+     }
+ }

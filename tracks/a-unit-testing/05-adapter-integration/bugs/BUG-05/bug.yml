@@ -1,0 +1,6 @@
+id: BUG-05
+title: "replaceIfStatus overwrites the order whatever its current status"
+hint: "Test the case where the expected status does not match what is stored."
+side: backend
+files:
+  - app/backend/src/main/java/dev/orderflow/infrastructure/dynamodb/DynamoOrderRepository.java

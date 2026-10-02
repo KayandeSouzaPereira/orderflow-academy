@@ -1,0 +1,16 @@
+diff --git a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+index ecd1891..b04831c 100644
+--- a/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
++++ b/app/backend/src/main/java/dev/orderflow/application/CreateOrderUseCase.java
+@@ -83,10 +83,7 @@ public class CreateOrderUseCase {
+     private Map<String, Product> loadProducts(Map<String, Integer> quantityByProduct) {
+         Map<String, Product> result = new LinkedHashMap<>();
+         for (String productId : quantityByProduct.keySet()) {
+-            Product product = products.findById(productId)
+-                    .orElseThrow(() -> new DomainException(ErrorCode.PRODUCT_NOT_FOUND,
+-                            "Product " + productId + " does not exist."));
+-            result.put(productId, product);
++            products.findById(productId).ifPresent(product -> result.put(productId, product));
+         }
+         return result;
+     }

@@ -1,0 +1,13 @@
+diff --git a/app/frontend/src/app/orders/order-status.component.ts b/app/frontend/src/app/orders/order-status.component.ts
+index cb9e8b6..2be42f8 100644
+--- a/app/frontend/src/app/orders/order-status.component.ts
++++ b/app/frontend/src/app/orders/order-status.component.ts
+@@ -72,7 +72,7 @@ export class OrderStatusComponent {
+         this.cancelling.set(false);
+         this.actionError.set(
+           statusOf(err) === 409
+-            ? (apiErrorOf(err)?.message ?? 'This order can no longer be cancelled.')
++            ? null
+             : 'The order could not be cancelled. Please try again.',
+         );
+         // The status probably changed meanwhile: show the current one.
