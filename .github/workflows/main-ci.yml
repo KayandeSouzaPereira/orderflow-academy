@@ -1,0 +1,159 @@
+# Keeps main healthy: the app builds and passes its own tests, every topic and
+# bug is well formed, every patch applies, and every topic's reference solution
+# (private repository) still catches 100% of the bugs with a score >= 90.
+name: main-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    # Maintainer PRs only: phases are stacked as phase/* branches.
+    branches: [main, "phase/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+  NODE_VERSION: "22"
+
+jobs:
+  scripts:
+    name: Scripts and structure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck
+        run: |
+          mapfile -t files < <(find scripts tracks app/aws-init -name '*.sh' -not -path '*/node_modules/*' | sort)
+          shellcheck -x "${files[@]}"
+
+      - name: Topics and bugs are well formed, every patch applies
+        run: ./scripts/dev/validate-structure.sh
+
+  backend:
+    name: Backend build and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+      # Smoke tests start Floci with Testcontainers (Docker is available on the runner).
+      - run: ./mvnw -B -ntp verify
+
+  frontend:
+    name: Frontend build and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx ng test --watch=false
+      - run: npx ng build
+
+  stack:
+    name: Full stack and API smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ORDERFLOW_PROCESSOR_DELAY_MS: "3000"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+      - name: Start the full stack
+        working-directory: app
+        run: docker compose --profile full up -d --build --wait
+      - name: API smoke tests (black-box)
+        working-directory: app/api-tests
+        run: ./mvnw -B -ntp test
+      - name: Stack logs
+        if: failure()
+        working-directory: app
+        run: docker compose --profile full logs --no-color
+      - name: Stop the stack
+        if: always()
+        working-directory: app
+        run: docker compose --profile full down -v
+
+  topics:
+    name: List topics
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      topics: ${{ steps.list.outputs.topics }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        run: |
+          topics="$(find tracks -name topic.yml -not -path '*/bugs/*' -not -path '*/app/*' \
+            | sed -e 's#^tracks/##' -e 's#/topic.yml$##' | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+          echo "topics=${topics}" >> "$GITHUB_OUTPUT"
+          echo "Topics: ${topics}"
+
+  bug-bank:
+    name: Bug bank (${{ matrix.topic }})
+    needs: [scripts, topics]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        topic: ${{ fromJson(needs.topics.outputs.topics) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check access to the private repository
+        env:
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          if [ -z "$PRIVATE_REPO_TOKEN" ]; then
+            echo "::error::Secret PRIVATE_REPO_TOKEN is not set: reference solutions cannot be read."
+            exit 1
+          fi
+
+      - name: Check out reference solutions (private)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/orderflow-academy-private
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: .private
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Validate the bug bank against the reference solution
+        run: ./scripts/dev/validate-topic.sh "${{ matrix.topic }}" --solutions .private/solutions

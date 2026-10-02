@@ -18,3 +18,4 @@ practices:
   - naming-convention
   - random-order-stable
 timeouts: { test_run_seconds: 300 }
+bug_bank: { min: 3, max: 3 }   # the example keeps it small

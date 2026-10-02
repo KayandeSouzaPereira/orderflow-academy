@@ -67,7 +67,12 @@ run_with_timeout() {
   "$@" &
   local pid=$!
   (
-    sleep "$seconds"
+    # Kill our own sleep when we are stopped, so no orphan 'sleep' is left.
+    sleeper=""
+    trap 'kill "$sleeper" 2>/dev/null; exit 0' TERM
+    sleep "$seconds" &
+    sleeper=$!
+    wait "$sleeper"
     if kill -0 "$pid" 2>/dev/null; then
       : >"$marker"
       kill -TERM "$pid" 2>/dev/null

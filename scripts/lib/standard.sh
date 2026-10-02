@@ -87,6 +87,7 @@ review_standard() {
   [[ -n "$assertions" ]] && PRACTICE_ASSERTIONS="$assertions"
 
   # Static prerequisites first: they fail in seconds, before any stack starts.
+  standard__require_test_files
   standard__required_practices
 
   if [[ "$(topic '.requires_stack')" == "true" ]]; then
@@ -141,11 +142,13 @@ standard__required_practices() {
   done < <(standard__practice_rules)
 }
 
+standard__require_test_files() {
+  (( ${#PRACTICE_FILES[@]} > 0 )) && return 0
+  score_hint "no-tests" "Write your tests in package $(topic '.test_package') (see the topic README)."
+  score_gate false "no test files in $(topic '.test_package')"
+}
+
 standard__gate() {
-  if (( ${#PRACTICE_FILES[@]} == 0 )); then
-    score_hint "no-tests" "Write your tests in package $(topic '.test_package') (see the topic README)."
-    score_gate false "no test files in $(topic '.test_package')"
-  fi
   score_progress "running your tests against the real code"
   local status=0
   runner_run || status=$?
