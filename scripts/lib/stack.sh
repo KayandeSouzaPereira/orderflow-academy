@@ -20,7 +20,7 @@ STACK_FRONTEND_PORT="${REVIEW_FRONTEND_PORT:-14200}"
 STACK_PROCESSOR_DELAY_MS=3000
 STACK_LOG=""
 # Docker Desktop errors worth a retry (a dropped connection, not a build error).
-STACK_TRANSIENT_ERRORS='error during connect|error reading from server|Unavailable|connection refused|TLS handshake timeout|i/o timeout|unexpected EOF|failed to receive status'
+STACK_TRANSIENT_ERRORS='error during connect|error reading from server|Unavailable|connection refused|TLS handshake timeout|i/o timeout|unexpected EOF|failed to receive status|connection reset by peer|failed to fetch oauth token|failed to authorize|TLS handshake timeout|net/http: request canceled|503 Service Unavailable|toomanyrequests'
 
 stack__compose() {
   FLOCI_PORT="$STACK_FLOCI_PORT" \
