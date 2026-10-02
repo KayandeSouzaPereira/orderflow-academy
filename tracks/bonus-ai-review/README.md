@@ -15,7 +15,7 @@ implementations it would still accept.
 The starter has three parts:
 
 - `starter/unit/`: unit tests of `CreateOrderUseCase` and the order processor
-  (backend, white-box, Mockito).
+  (backend, white-box, `@QuarkusTest` with `@InjectMock`, as in track A).
 - `starter/api/`: black-box API tests of the order endpoints (RestAssured).
 - `starter/broken/HallucinatedApiTest.java.txt`: a test that uses methods that
   do not exist. It is outside the build until you fix it.
@@ -43,7 +43,7 @@ problem it found.
 
 | Criterion | Weight | Measured by |
 | --- | --- | --- |
-| Prerequisite | - | `original-tests-kept`: every original test method still exists (otherwise 0) |
+| Prerequisites | - | `original-tests-kept`: every original test method still exists; `quarkus-test-required`: every unit test class keeps `@QuarkusTest` (otherwise 0) |
 | Gate | - | both suites pass against the real code |
 | Bug bank | 50 | share of 8 planted bugs (business rules, API, asynchronous processing) your tests catch |
 | Mutation score | 20 | PIT on `CreateOrderUseCase`, `ProcessOrderCreatedUseCase` and `OrderPricing`; full points at 75% |
